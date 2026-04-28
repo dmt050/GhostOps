@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="theme-color" content="#030a03"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<title>GhostOps: ITACUA — KingSLayer Terminal</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&family=Barlow+Condensed:wght@400;600;700;900&display=swap" rel="stylesheet"/>
+<style>
+/* ═══ CRT MILITARY DESIGN SYSTEM ═══════════════════════════════ */
+:root {
+  --crt-green:   #00ff41;
+  --crt-dim:     #00b32d;
+  --crt-dark:    #006618;
+  --crt-ghost:   #00400e;
+  --crt-amber:   #ffb000;
+  --crt-red:     #ff2020;
+  --crt-blue:    #00c8ff;
+  --bg:          #030a03;
+  --bg2:         #060e06;
+  --bg3:         #0a160a;
+  --border:      #0d2a0d;
+  --border2:     #1a4a1a;
+  --vt:          'VT323', monospace;
+  --mono:        'Share Tech Mono', monospace;
+  --cond:        'Barlow Condensed', sans-serif;
+  --scanline:    repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,65,.03) 2px,rgba(0,255,65,.03) 4px);
+  --phosphor:    0 0 8px #00ff41, 0 0 20px #00ff4155;
+  --phosphor-sm: 0 0 4px #00ff41;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--bg);cursor:default}
+body{font-family:var(--mono);color:var(--crt-green);display:flex;flex-direction:column}
+
+/* CRT scanlines + flicker */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
+  background:var(--scanline);animation:flicker 8s infinite;
+}
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:9997;
+  background:radial-gradient(ellipse at 50% 50%,transparent 55%,rgba(0,0,0,.75) 100%);
+}
+@keyframes flicker{0%,98%,100%{opacity:1}99%{opacity:.92}}
+
+/* ═══ TOPBAR ═══════════════════════════════════════════════════ */
+#topbar{
+  flex-shrink:0;height:46px;
+  background:linear-gradient(180deg,#061206,#030a03);
+  border-bottom:1px solid var(--border2);
+  display:flex;align-items:center;gap:0;z-index:100;
+  position:relative;overflow:hidden;
+}
+#topbar::after{content:'';position:absolute;bottom:0;left:0;right:0;
+  height:1px;background:var(--crt-green);box-shadow:var(--phosphor-sm);opacity:.6}
+
+.tb-logo{
+  font-family:var(--vt);font-size:26px;color:var(--crt-green);
+  letter-spacing:.15em;text-shadow:var(--phosphor);
+  padding:0 16px;border-right:1px solid var(--border2);
+  white-space:nowrap;line-height:46px;
+}
+.tb-logo span{color:var(--crt-amber);text-shadow:0 0 8px var(--crt-amber)}
+.tb-logo sub{font-family:var(--mono);font-size:9px;letter-spacing:.2em;
+  color:var(--crt-dark);vertical-align:middle;margin-left:6px}
+
+.tb-selwrap{padding:0 10px;border-right:1px solid var(--border2);height:100%;
+  display:flex;align-items:center;gap:6px}
+.tb-sel-label{font-size:9px;letter-spacing:.15em;color:var(--crt-dark);text-transform:uppercase}
+select.tbsel{
+  font-family:var(--mono);font-size:11px;
+  background:var(--bg2);color:var(--crt-green);
+  border:.5px solid var(--border2);border-radius:2px;
+  padding:4px 6px;cursor:pointer;outline:none;
+  text-shadow:var(--phosphor-sm);
+}
+select.tbsel:focus{border-color:var(--crt-green);box-shadow:0 0 6px #00ff4155}
+select.tbsel option{background:var(--bg2);color:var(--crt-green)}
+
+#tb-clock{
+  font-family:var(--vt);font-size:22px;color:var(--crt-amber);
+  letter-spacing:.1em;margin-left:auto;padding:0 14px;
+  text-shadow:0 0 8px var(--crt-amber);
+  border-left:1px solid var(--border2);height:100%;line-height:46px;
+}
+
+#btn-gen{
+  font-family:var(--vt);font-size:20px;letter-spacing:.12em;
+  background:transparent;color:var(--crt-green);
+  border:1px solid var(--crt-green);border-radius:2px;
+  padding:6px 18px;cursor:pointer;margin:0 10px;
+  text-shadow:var(--phosphor);box-shadow:0 0 8px #00ff4133;
+  transition:all .12s;white-space:nowrap;
+}
+#btn-gen:hover{background:#00ff4122;box-shadow:var(--phosphor);color:#fff}
+#btn-gen.busy{opacity:.4;pointer-events:none}
+
+/* ═══ OPERATOR BADGE ═══════════════════════════════════════════ */
+#op-badge{
+  padding:0 12px;border-left:1px solid var(--border2);
+  height:100%;display:flex;align-items:center;gap:8px;font-size:10px;
+}
+.op-role-icon{font-size:18px;font-family:var(--vt);color:var(--crt-amber);
+  text-shadow:0 0 8px var(--crt-amber)}
+.op-role-name{color:var(--crt-amber);letter-spacing:.1em;text-shadow:0 0 4px var(--crt-amber)}
+.op-weapon{color:var(--crt-dark);font-size:9px;margin-top:1px}
+
+/* ═══ MAIN LAYOUT ══════════════════════════════════════════════ */
+#main{display:flex;flex:1;overflow:hidden}
+
+/* ═══ SIDEBAR ══════════════════════════════════════════════════ */
+#sidebar{
+  width:330px;flex-shrink:0;background:var(--bg2);
+  border-right:1px solid var(--border2);
+  display:flex;flex-direction:column;overflow-y:auto;
+  position:relative;
+}
+/* sidebar scanlines */
+#sidebar::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background:var(--scanline);z-index:0;opacity:.5}
+#sidebar>*{position:relative;z-index:1}
+
+.ss{border-bottom:1px solid var(--border);padding:12px 14px}
+.ss-label{
+  font-size:9px;letter-spacing:.22em;color:var(--crt-dark);
+  text-transform:uppercase;margin-bottom:7px;
+  display:flex;align-items:center;gap:6px;
+}
+.ss-label::before{content:'>';color:var(--crt-green);text-shadow:var(--phosphor-sm)}
+
+/* OP NAME */
+#op-name{
+  font-family:var(--vt);font-size:24px;color:var(--crt-green);
+  letter-spacing:.08em;text-shadow:var(--phosphor);line-height:1.1;
+  animation:typing-glow 3s ease-in-out infinite alternate;
+}
+@keyframes typing-glow{0%{text-shadow:var(--phosphor)}100%{text-shadow:0 0 4px #00ff41}}
+#op-sub{font-size:10px;color:var(--crt-dark);margin-top:3px;letter-spacing:.05em}
+
+/* TAGS */
+.tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.tag{font-size:10px;padding:2px 7px;border-radius:1px;border:.5px solid;
+  font-family:var(--mono);letter-spacing:.06em}
+.t-mission{background:#001a06;color:var(--crt-green);border-color:#004a12;
+  text-shadow:var(--phosphor-sm)}
+.t-mod{background:#1a0e00;color:var(--crt-amber);border-color:#4a2e00;
+  text-shadow:0 0 4px var(--crt-amber)}
+.t-water{background:#001a1a;color:var(--crt-blue);border-color:#004a4a;
+  text-shadow:0 0 4px var(--crt-blue)}
+.t-prisoners{background:#1a001a;color:#ff80ff;border-color:#4a004a;
+  text-shadow:0 0 4px #ff80ff;animation:blink-tag .8s infinite}
+.t-uw{background:#0a0a1a;color:#80c0ff;border-color:#1a2a5a;
+  text-shadow:0 0 4px #80c0ff}
+.t-uw{background:#001010;color:#40ffe0;border-color:#00504a;
+  text-shadow:0 0 4px #40ffe0}
+.t-fail{background:#1a0000;color:var(--crt-red);border-color:#4a0000;
+  text-shadow:0 0 4px var(--crt-red);animation:blink-tag .8s infinite}
+@keyframes blink-tag{0%,100%{opacity:1}50%{opacity:.5}}
+
+/* BRIEFING */
+#brief-wrap{padding:12px 14px;border-bottom:1px solid var(--border);min-height:120px;max-height:200px;overflow-y:auto}
+#brief-text{
+  font-size:11.5px;line-height:1.8;color:#80e8a0;font-weight:300;
+  white-space:pre-wrap;
+}
+#brief-text.empty{color:var(--crt-ghost);font-style:italic;font-size:11px}
+#brief-text.typing::after{content:'▋';animation:cursor-blink .6s infinite}
+@keyframes cursor-blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* WAYPOINTS */
+.wp-section{padding:12px 14px;border-bottom:1px solid var(--border)}
+.wp{display:flex;align-items:flex-start;gap:9px;padding:6px 0;
+  border-bottom:.5px solid var(--border)}
+.wp:last-child{border-bottom:none}
+.wp-icon{
+  font-family:var(--vt);font-size:16px;flex-shrink:0;width:18px;
+  text-align:center;margin-top:1px;
+}
+.wp-name{font-family:var(--cond);font-size:13px;font-weight:700;
+  letter-spacing:.06em;color:#c0ffd0}
+.wp-loc{font-size:10px;color:var(--crt-amber);margin-top:1px;
+  text-shadow:0 0 4px var(--crt-amber)55}
+.wp-desc{font-size:10px;color:var(--crt-dark);margin-top:1px}
+
+/* STATE BUTTONS */
+#state-btns{display:flex;gap:6px;padding:10px 14px;border-bottom:1px solid var(--border)}
+.sbtn{
+  flex:1;font-family:var(--vt);font-size:17px;letter-spacing:.1em;
+  border-radius:2px;padding:7px 4px;cursor:pointer;
+  border:.5px solid;transition:all .12s;display:none;
+  background:transparent;
+}
+#b-ok{color:#4aff80;border-color:#1a5a30}
+#b-ok:hover{background:#1a5a3044;box-shadow:0 0 8px #4aff8044}
+#b-fail{color:var(--crt-red);border-color:#5a1010}
+#b-fail:hover{background:#5a101044;box-shadow:0 0 8px var(--crt-red)}
+#b-abort{color:var(--crt-amber);border-color:#5a3800}
+#b-abort:hover{background:#5a380044;box-shadow:0 0 8px var(--crt-amber)}
+
+/* LOG */
+#log-section{padding:10px 14px;flex:1}
+.log-entry{font-size:10px;color:var(--crt-ghost);padding:4px 0;
+  border-bottom:.5px solid var(--border);line-height:1.5}
+.log-entry:last-child{border-bottom:none}
+.log-op{color:var(--crt-dim);font-size:11px}
+.ls-S{color:#4aff80}.ls-F{color:var(--crt-red)}.ls-A{color:var(--crt-amber)}
+
+/* ═══ MAP ══════════════════════════════════════════════════════ */
+#mapwrap{flex:1;position:relative;overflow:hidden}
+#map{width:100%;height:100%}
+
+/* Military monitor vignette + scanlines on map */
+#map-overlay{
+  position:absolute;inset:0;pointer-events:none;z-index:400;
+  background:
+    repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.02) 3px,rgba(0,0,0,.02) 4px),
+    radial-gradient(ellipse at 50% 50%,rgba(0,50,0,.05) 0%,rgba(0,0,0,.2) 100%);
+}
+/* Green tint overlay */
+#map-overlay::after{
+  content:'';position:absolute;inset:0;
+  background:rgba(0,40,0,.1);mix-blend-mode:multiply;
+}
+
+/* LEGEND */
+#legend{
+  position:absolute;bottom:14px;right:14px;z-index:999;
+  background:rgba(3,10,3,.94);border:.5px solid var(--border2);
+  border-radius:3px;padding:9px 12px;font-size:10px;color:var(--crt-dark);
+  text-shadow:var(--phosphor-sm);
+}
+.lr{display:flex;align-items:center;gap:7px;margin-bottom:4px}
+.lr:last-child{margin-bottom:0}
+.ld{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* ACTIVE BADGE */
+#active-badge{
+  position:absolute;top:12px;left:12px;z-index:999;
+  background:rgba(3,10,3,.94);border:.5px solid var(--crt-green);
+  border-radius:3px;padding:5px 10px;
+  font-family:var(--vt);font-size:16px;color:var(--crt-green);
+  letter-spacing:.1em;text-shadow:var(--phosphor);display:none;
+  animation:badge-pulse 2s infinite;
+}
+@keyframes badge-pulse{0%,100%{box-shadow:0 0 6px #00ff4133}50%{box-shadow:0 0 14px #00ff4166}}
+#active-badge span{color:var(--crt-amber);text-shadow:0 0 6px var(--crt-amber)}
+
+/* MODIFIER ALERT */
+#mod-alert{
+  position:absolute;top:12px;right:12px;z-index:999;
+  background:rgba(20,8,0,.96);border:.5px solid var(--crt-amber);
+  border-radius:3px;padding:5px 11px;
+  font-family:var(--vt);font-size:15px;color:var(--crt-amber);
+  letter-spacing:.1em;text-shadow:0 0 8px var(--crt-amber);display:none;
+}
+
+/* ═══ LEAFLET OVERRIDES ════════════════════════════════════════ */
+.leaflet-popup-content-wrapper{
+  background:rgba(3,10,3,.97)!important;
+  border:.5px solid var(--border2)!important;
+  border-radius:3px!important;
+  box-shadow:0 0 16px #00ff4133!important;
+}
+.leaflet-popup-tip{background:rgba(3,10,3,.97)!important}
+.leaflet-popup-content{margin:10px 13px!important;font-family:var(--mono)!important;
+  font-size:11px!important;line-height:1.7!important;color:var(--crt-green)!important}
+.pop-title{font-family:var(--vt)!important;font-size:17px!important;
+  color:var(--crt-amber)!important;text-shadow:0 0 6px var(--crt-amber)!important;margin-bottom:3px}
+.pop-type{font-size:9px;color:var(--crt-dark);letter-spacing:.1em;text-transform:uppercase}
+.pop-coord{font-size:9px;color:var(--crt-ghost);margin-top:3px}
+.leaflet-control-zoom a{
+  background:var(--bg2)!important;color:var(--crt-green)!important;
+  border-color:var(--border2)!important;font-size:16px!important;
+  text-shadow:var(--phosphor-sm)!important;
+}
+.leaflet-control-zoom a:hover{background:var(--bg3)!important}
+.leaflet-tooltip{
+  background:rgba(3,10,3,.95)!important;border:.5px solid var(--border2)!important;
+  color:var(--crt-dim)!important;font-family:var(--mono)!important;
+  font-size:10px!important;border-radius:2px!important;box-shadow:none!important;
+}
+
+/* ═══ RESPONSIVE — MOBILE FIRST ════════════════════════════════ */
+
+/* Scrollable body on mobile */
+@media(max-width:720px){
+  html,body{height:100%;overflow:hidden}
+
+  /* TOPBAR */
+  #topbar{
+    height:auto;padding:6px 8px;flex-wrap:wrap;gap:4px;
+    row-gap:4px;
+  }
+  .tb-logo{border-right:none;font-size:18px;padding:0 6px;line-height:32px}
+  .tb-logo sub{display:none}
+  .tb-selwrap{padding:0 6px;gap:4px;height:32px}
+  .tb-sel-label{font-size:8px}
+  select.tbsel{font-size:10px;padding:3px 4px}
+  #op-badge{padding:0 6px;gap:5px;font-size:9px;height:32px}
+  .op-role-icon{font-size:16px}
+  #tb-clock{font-size:18px;padding:0 8px;height:32px;line-height:32px;border-left:none;margin-left:0}
+  #btn-gen{
+    font-size:16px;padding:5px 12px;margin:0 4px;
+    /* Make tap target bigger */
+    min-height:36px;
+  }
+
+  /* LAYOUT */
+  #main{
+    display:flex;flex-direction:column;flex:1;overflow:hidden;
+  }
+
+  /* BOTTOM TAB BAR */
+  #mobile-tabs{
+    display:flex;flex-shrink:0;
+    background:var(--bg2);border-top:1px solid var(--border2);
+    z-index:200;
+  }
+  .mtab{
+    flex:1;font-family:var(--vt);font-size:13px;letter-spacing:.08em;
+    color:var(--crt-dark);background:transparent;border:none;
+    padding:10px 4px;cursor:pointer;
+    border-top:2px solid transparent;transition:all .12s;
+  }
+  .mtab.active{color:var(--crt-green);border-top-color:var(--crt-green);
+    text-shadow:var(--phosphor-sm)}
+  .mtab-icon{font-size:18px;display:block;margin-bottom:1px}
+
+  /* PANELS */
+  #sidebar{
+    width:100%;flex:1;
+    border-right:none;border-bottom:none;
+    overflow-y:auto;-webkit-overflow-scrolling:touch;
+    display:none; /* shown by tab */
+  }
+  #sidebar.tab-active{display:flex}
+
+  #mapwrap{
+    flex:1;
+    display:none;
+  }
+  #mapwrap.tab-active{display:block}
+
+  /* SIDEBAR sections larger tap targets */
+  .ss{padding:10px 12px}
+  #op-name{font-size:20px}
+  .tag{font-size:9px;padding:2px 6px}
+  #brief-wrap{max-height:none;padding:10px 12px}
+  #brief-text{font-size:12px;line-height:1.7}
+  .wp-section{padding:10px 12px}
+  .wp{padding:8px 0;gap:10px}
+  .wp-name{font-size:14px}
+  .wp-loc{font-size:11px}
+
+  /* STATE BUTTONS — bigger for touch */
+  #state-btns{
+    gap:8px;padding:10px 12px;position:sticky;bottom:0;
+    background:var(--bg2);border-top:1px solid var(--border);
+    z-index:10;
+  }
+  .sbtn{
+    font-size:16px;padding:12px 4px;min-height:48px;
+  }
+
+  /* MAP overlays reposition */
+  #active-badge{font-size:14px;top:8px;left:8px;padding:4px 8px}
+  #mod-alert{font-size:13px;top:8px;right:8px;padding:4px 8px}
+  #legend{bottom:8px;right:8px;padding:7px 10px}
+
+  /* Log */
+  #log-section{padding:10px 12px}
+  .log-entry{font-size:11px;padding:6px 0}
+}
+
+/* Desktop: hide tab bar */
+@media(min-width:721px){
+  #mobile-tabs{display:none}
+  #sidebar{display:flex!important}
+  #mapwrap{display:block!important}
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <div class="tb-logo">Ghost<span>Ops</span><sub>ITACUA / KingSLayer</sub></div>
+
+  <div class="tb-selwrap">
+    <span class="tb-sel-label">Missão</span>
+    <select class="tbsel" id="sel-type">
+      <option value="any">QUALQUER</option>
+      <option value="Assassination">ASSASSINATO</option>
+      <option value="Sabotage">SABOTAGEM C4</option>
+      <option value="Assault">ASSALTO</option>
+      <option value="AssaultSab">ASSALTO+SAB</option>
+      <option value="Recon">RECON</option>
+      <option value="Rescue">RESGATE DE PRISIONEIROS</option>
+      <option value="UW">GUERRA NÃO CONVENCIONAL (GNC)</option>
+    </select>
+  </div>
+
+  <div class="tb-selwrap">
+    <span class="tb-sel-label">Operador</span>
+    <select class="tbsel" id="sel-role">
+      <option value="any">ALEATÓRIO</option>
+      <option value="Sniper">SNIPER</option>
+      <option value="CQB">CQB</option>
+      <option value="Support">SUPORTE</option>
+      <option value="Assault">ASSALTO</option>
+      <option value="Ghost">GHOST</option>
+    </select>
+  </div>
+
+  <div id="op-badge" style="display:none">
+    <div class="op-role-icon" id="role-icon">◈</div>
+    <div>
+      <div class="op-role-name" id="role-name">—</div>
+      <div class="op-weapon" id="role-weapon">—</div>
+    </div>
+  </div>
+
+  <div id="tb-clock">--:--:--</div>
+  <button id="btn-gen" onclick="generateMission()">▶ GERAR OP</button>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <!-- Briefing header -->
+    <div class="ss">
+      <div class="ss-label">Classificação · KingSLayer</div>
+      <div id="op-name">[ AGUARDANDO ORDENS ]</div>
+      <div id="op-sub">Terminal inativo. Aguarde transmissão.</div>
+      <div class="tags" id="op-tags"></div>
+    </div>
+
+    <!-- Briefing text -->
+    <div id="brief-wrap">
+      <div class="ss-label" style="padding:0 0 6px">Briefing Operacional</div>
+      <div id="brief-text" class="empty">_ Pressione GERAR OP para receber missão, Nomad.</div>
+    </div>
+
+    <!-- Waypoints -->
+    <div class="wp-section" id="sec-wp" style="display:none">
+      <div class="ss-label">Waypoints Táticos</div>
+      <div id="wp-list"></div>
+    </div>
+
+    <!-- State buttons -->
+    <div id="state-btns">
+      <button class="sbtn" id="b-ok"    onclick="resolve('S')">✓ SUCESSO</button>
+      <button class="sbtn" id="b-fail"  onclick="resolve('F')">✕ FALHA</button>
+      <button class="sbtn" id="b-abort" onclick="resolve('A')">⚠ ABORT</button>
+    </div>
+
+    <!-- Log -->
+    <div id="log-section">
+      <div class="ss-label" style="margin-bottom:6px">KingSLayer Log</div>
+      <div id="log-list"><div class="log-entry" style="color:var(--crt-ghost)">_ Nenhum registro.</div></div>
+    </div>
+  </div>
+
+  <!-- MAP -->
+  <div id="mapwrap" class="tab-active">
+    <div id="map"></div>
+    <div id="map-overlay"></div>
+
+    <div id="legend">
+      <div class="lr"><div class="ld" style="background:#00ff41;box-shadow:0 0 5px #00ff41"></div>Inserção</div>
+      <div class="lr"><div class="ld" style="background:#ff2020;box-shadow:0 0 5px #ff2020"></div>Objetivo</div>
+      <div class="lr"><div class="ld" style="background:#ffb000;box-shadow:0 0 5px #ffb000"></div>Obj. Sec.</div>
+      <div class="lr"><div class="ld" style="background:#00c8ff;box-shadow:0 0 5px #00c8ff"></div>Extração</div>
+    </div>
+    <div id="active-badge">OP ATIVA ● <span id="badge-name">—</span></div>
+    <div id="mod-alert" id="mod-alert">⚠ <span id="mod-text">—</span></div>
+  </div>
+</div>
+
+<!-- MOBILE TAB BAR -->
+<div id="mobile-tabs">
+  <button class="mtab" id="tab-brief" onclick="switchTab('brief')">
+    <span class="mtab-icon">◈</span>MISSÃO
+  </button>
+  <button class="mtab active" id="tab-map" onclick="switchTab('map')">
+    <span class="mtab-icon">⊞</span>MAPA
+  </button>
+  <button class="mtab" id="tab-log" onclick="switchTab('log')">
+    <span class="mtab-icon">▤</span>LOG
+  </button>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  DATABASE — POIs ITACUA (exatamente conforme especificação)
+// ═══════════════════════════════════════════════════════════════
+const itacuaPOIs = [
+  // Fazendas
+  { name:"Mendez Farm",                   type:"Farm",       x:251, y:160 },
+  { name:"Atollo Farm",                   type:"Farm",       x:319, y:144 },
+  { name:"Colqhe Ranch",                  type:"Farm",       x:338, y:147 },
+  { name: "Bocca Farm",                    type: "Farm",       x:278, y:110 },
+  // Checkpoints
+  { name:"CP North (Cotani)",             type:"Checkpoint", x:240, y:340 },
+  { name:"CP South (Itacua Base)",        type:"Checkpoint", x:358, y:132 },
+  // Vilas e POIs
+  { name:"Khochi",                        type:"Village",    x:490, y:88, water:true, prisoners:true },
+  { name:"Buena Vida",                    type:"Village",    x:350, y:318 },
+  { name:"Cotani",                        type:"Village",    x:273, y:329 },
+  { name:"Culta",                         type:"POI",    x:188, y:276 },
+  { name:"Pantoja",                       type:"Village",    x:120, y:186 },
+  { name:"Santa Maria",                   type:"POI",    x:233, y:286 },
+  { name:"Vieja Granja",                  type:"POI",    x:381, y:258  },
+  { name:"Campo de Futebol El Yayo",      type:"POI",        x:401, y:155, water:true },
+  // Seguros (inserção/extração apenas)
+  { name:"Yopil",                         type:"Safe",       x:227, y:312 }, //original x:300, y:100
+  { name:"Hunt Lodge",                    type:"Safe",       x:156, y:244 }, //original x:470, y:300
+  { name:"Santa Catalina Chapel",         type:"Safe",       x:267, y:252 }, //original x:150, y:300
+  { name:"Baurecito Ruins",               type:"Safe",       x:378, y:202 },
+  { name: "Itacua Alpha (Rally Point)",    type: "Safe",       x:312, y:204 },
+  { name: "Itacua Bravo (Rally Point)",    type: "Safe",       x:140, y:213 },
+  { name: "Itacua Charlie (Rally Point)",  type: "Safe",       x:195, y:90  },
+  { name: "Itacua Delta (Rally Point)",    type: "Safe",       x:375, y:110 },
+  { name: "Itacua Echo (Rally Point)",     type: "Safe",       x: 238, y: 310 },
+  // Santa Blanca — Military
+  { name:"Outpost Central (Catalina)",    type:"Military",   x:350, y:262 },
+  { name:"Outpost Sul (Rally Point Charlie)", type:"Military", x:207, y:127, prisoners:true },
+  { name:"La Casa del Mexicano",          type:"Military",   x:342, y:100 },
+  { name:"Sicario House",                 type:"Military",   x:184, y:178 },
+  { name:"Itacua Base (Santa Blanca)",    type:"Military",   x:338, y:82, prisoners:true },
+  // Unidad — Military
+  { name:"F.O.B. Armadillo",             type:"Military",   x:415, y:212, water:true, prisoners:true },
+  { name:"Observation Outpost (Unidad)",  type:"Military",   x:95, y:172 },
+];
+
+// ═══ OPERADOR ROLES ═════════════════════════════════════════════
+const ROLES = {
+  Sniper: {
+    icon: "◎",
+    weapons: [
+      "HTI",
+      "L115A3",
+      "MSR",
+      "SRSA1",
+      "SR-1",
+      "Stampede",
+      "M40A5",
+      "M1891",
+      "Lanza Sagrada",
+      "The Warhawk",
+      "SR-25",
+      "Dragunov (SVD)",
+      "G28",
+      "MK14"
+    ],
+    desc: "Engajamento de longa distância. Inclui bolt-action e semi-automáticos (DMR)."
+  },
+
+  Support: {
+    icon: "▣",
+    weapons: [
+      "M249",
+      "MK48",
+      "Stoner LMG",
+      "PKM",
+      "MG121",
+      "M60",
+      "M60E4"
+    ],
+    desc: "Supressão de área. Cobertura de retirada."
+  },
+
+  Assault: {
+    icon: "◆",
+    weapons: [
+      "M4A1",
+      "M4A1 Tactical",
+      "MK17",
+      "MK16",
+      "AK-12",
+      "AK-47",
+      "ACR",
+      "AUG A3",
+      "G36C",
+      "L85A2",
+      "P416",
+      "TAR-21",
+      "556xi",
+      "805 Bren A2",
+      "FAL",
+      "MDR",
+      "R5 RGP",
+      "SR3M",
+      "SIG556",
+      "G2"
+    ],
+    desc: "Combate CQB/médio range. Entrada de força."
+  },
+
+  Ghost: {
+    icon: "◈",
+    weapons: [
+      "MP5",
+      "MP7",
+      "P90",
+      "Vector .45",
+      "MPX",
+      "PP19 Bizon",
+      "Scorpion EVO 3",
+      "UMP45"
+    ],
+    desc: "Infiltração silenciosa. SMGs suprimidas. Zero contato."
+  },
+
+  CQB: {
+    icon: "◉",
+    weapons: [
+      "SPAS-12",
+      "SASG-12",
+      "Super Shorty",
+      "M4 Super 90",
+      "AA-12"
+    ],
+    desc: "Combate extremamente próximo."
+  }
+};
+
+// ═══ MISSION TEMPLATES ══════════════════════════════════════════
+const MISSION_TYPES = {
+  Assassination:{
+    label:"ASSASSINATO",
+    validTypes:["Military","Checkpoint","Village","Farm","POI"],
+    briefFn:(obj,sec,ins,ex,role,mod,time,water)=>`
+HORA LOCAL: ${time} // CLASSIFICAÇÃO: KINGSLAYER
+OP: NEUTRALIZAÇÃO DE ALVO DE ALTO VALOR
+
+OBJETIVO PRIMÁRIO: Localizar e eliminar alvo designado operando em ${obj.name}.
+O HVT deve ser neutralizado com confirmação de eliminação (biometria).
+
+INSERÇÃO: ${water?'AQUÁTICA via lancha rebelde a partir de':'Terrestre via '} ${ins.name}.
+${sec ? `OBJETIVO SEC.: Destruir equipamento de comunicações em ${sec.name}.` : 'OBJETIVO SEC.: Sem missão secundária. Foco total no primário.'}
+EXTRAÇÃO: ${ex.name}. Janela de ${Math.floor(Math.random()*8+12)} minutos.
+
+OPERADOR: ${role.desc}
+${mod?'⚠ MODIFICADOR ATIVO: '+mod:''}
+ROE: Engajamento apenas de combatentes armados.
+`.trim()
+  },
+  Sabotage:{
+    label:"SABOTAGEM C4",
+    validTypes:["Military","Farm","Checkpoint","Village","POI"],
+    briefFn:(obj,sec,ins,ex,role,mod,time,water)=>`
+HORA LOCAL: ${time} // CLASSIFICAÇÃO: KINGSLAYER
+OP: SABOTAGEM — AUTORIZAÇÃO CHARLIE-4
+
+OBJETIVO PRIMÁRIO: Infiltrar ${obj.name} e plantar cargas C4 na infraestrutura.
+Detonar remotamente após atingir distância de segurança mínima (300m).
+
+INSERÇÃO: ${water?'AQUÁTICA via infiltração fluvial a partir de':'Veicular oculto via '} ${ins.name}.
+${sec ? `OBJETIVO SEC.: Eliminar o Comandante de Segurança local em ${sec.name}.` : 'OBJETIVO SEC.: Sem missão secundária. Foco total no primário.'}
+EXTRAÇÃO: ${ex.name}. Exfil antes da chegada do QRF (${Math.floor(Math.random()*5+8)} min após detonação).
+
+OPERADOR: ${role.desc}
+${mod?'⚠ MODIFICADOR ATIVO: '+mod:''}
+ROE: Baixas civis são INACEITÁVEIS. Verifique área antes da detonação.
+`.trim()
+  },
+  Assault:{
+    label:"ASSALTO (LIMPEZA)",
+    validTypes:["Military","Checkpoint","Farm","Village","POI"],
+    briefFn:(obj,sec,ins,ex,role,mod,time,water)=>`
+HORA LOCAL: ${time} // CLASSIFICAÇÃO: KINGSLAYER
+OP: ASSALTO — LIMPEZA TÁTICA
+
+OBJETIVO PRIMÁRIO: Neutralizar TODA a presença inimiga em ${obj.name}.
+Confirmar eliminação de todos os combatentes. Área deve ser declarada limpa.
+
+INSERÇÃO: ${water?'AQUÁTICA com cobertura anfíbia via':'Infiltração oculta via '} ${ins.name}.
+${sec ? `OBJETIVO SEC.: Capturar Sicario Líder para interrogação em ${sec.name}.` : 'OBJETIVO SEC.: Sem missão secundária. Foco total no primário.'}
+EXTRAÇÃO: ${ex.name}. Heliborne ou terrestre conforme disponibilidade.
+
+OPERADOR: ${role.desc}
+${mod?'⚠ MODIFICADOR ATIVO: '+mod:''}
+ROE: Máxima força autorizada. Nenhum combatente deve escapar do perímetro.
+`.trim()
+  },
+  AssaultSab:{
+    label:"ASSALTO + SABOTAGEM",
+    validTypes:["Military","Farm","Checkpoint","POI"],
+    briefFn:(obj,sec,ins,ex,role,mod,time,water)=>`
+HORA LOCAL: ${time} // CLASSIFICAÇÃO: KINGSLAYER
+OP: ASSALTO COMBINADO + DESTRUIÇÃO DE INFRAESTRUTURA
+
+FASE 1 — ASSALTO: Eliminar guarnição de ${obj.name}. Garantir perímetro seguro.
+FASE 2 — SABOTAGEM: Plantar C4 nos pontos críticos e detonar na saída.
+
+INSERÇÃO: ${water?'AQUÁTICA via ponto de infiltração fluvial em':'Infiltração noturna via '} ${ins.name}.
+${sec ? `OBJETIVO SEC.: Neutralizar o Comandante de Segurança em ${sec.name}.` : 'OBJETIVO SEC.: Sem missão secundária. Foco total no primário.'}
+EXTRAÇÃO: ${ex.name} antes do amanhecer.
+
+OPERADOR: ${role.desc}
+${mod?'⚠ MODIFICADOR ATIVO: '+mod:''}
+NOTA: Op de duas fases. Não ative a Fase 2 com hostis vivos no perímetro.
+`.trim()
+  },
+  Recon:{
+    label:"RECON (FURTIVO)",
+    validTypes:["Military","Farm","Checkpoint","Village","POI"],
+    briefFn:(obj,sec,ins,ex,role,mod,time,water)=>`
+HORA LOCAL: ${time} // CLASSIFICAÇÃO: KINGSLAYER
+OP: RECONHECIMENTO — PROTOCOLO SILENCIOSO
+
+OBJETIVO PRIMÁRIO: Estabelecer posição de observação em ${obj.name}.
+Documentar força inimiga, rotação de patrulhas e hardware. SEM ENGAJAMENTO.
+
+INSERÇÃO: ${water?'AQUÁTICA furtiva (pré-amanhecer) via':'Infiltração pré-amanhecer via '} ${ins.name}.
+${sec ? `OBJETIVO SEC.: Eliminar patrulha inimiga identificada próxima a ${sec.name}.` : 'OBJETIVO SEC.: Sem missão secundária. Foco total no primário.'}
+EXTRAÇÃO: ${ex.name}. Não pode ser detectado antes nem durante a extração.
+
+OPERADOR: ${role.desc}
+${mod?'⚠ MODIFICADOR ATIVO: '+mod:''}
+ROE: ZERO engajamentos. Qualquer contato cancela a Op e ativa protocolo de evasão.
+`.trim()
+  },
+  // Missões de falha vinculadas
+  Rescue:{
+    label:"RESGATE DE PRISIONEIROS",
+    validTypes:["Military","Checkpoint","Village"],
+    requiresPrisoners: true,
+    briefFn:(obj,sec,ins,ex,role,mod,time,water)=>`
+HORA LOCAL: ${time} // CLASSIFICAÇÃO: KINGSLAYER // PRIORIDADE ALFA
+⛓ LIBERTAÇÃO — PRISIONEIROS REBELDES CONFIRMADOS
+
+Intel indica presença de prisioneiros rebeldes mantidos em cativeiro em ${obj.name}.
+Janela de resgate: CRÍTICA. Execuções programadas para as próximas horas.
+
+FASE 1 — NEUTRALIZAÇÃO: Eliminar a guarda inimiga e garantir o perímetro.
+FASE 2 — LOCALIZAÇÃO: Localizar e confirmar todos os prisioneiros com vida.
+FASE 3 — EXTRAÇÃO: Evacuar prisioneiros via ponto de exfiltração designado.
+
+INSERÇÃO: ${water?'AQUÁTICA silenciosa via lancha a partir de':'Infiltração furtiva via '} ${ins.name}.
+${sec ? `OBJETIVO SEC.: Eliminar o Comandante responsável pelo cativeiro em ${sec.name}.` : 'OBJETIVO SEC.: Sem missão secundária. Foco total no resgate.'}
+EXTRAÇÃO: ${ex.name}. Helicóptero médico em standby. Código: NOVA-LIMA BRAVO.
+
+OPERADOR: ${role.desc}
+${mod?'⚠ MODIFICADOR ATIVO: '+mod:''}
+REGRAS DE ENGAJAMENTO: ROE restrito. Zero baixas civis. Prisioneiros têm PRIORIDADE ABSOLUTA.
+NOTA: Qualquer prisioneiro deixado para trás é considerado falha de missão.
+`.trim()
+  },
+  UW:{
+    label:"GUERRA NÃO CONVENCIONAL",
+    validTypes:["Military","Checkpoint","Farm","Village","POI"],
+    briefFn:(obj,sec,ins,ex,role,mod,time,water,hasPrisoners)=>hasPrisoners?`
+HORA LOCAL: ${time} // CLASSIFICAÇÃO: KINGSLAYER // DOUTRINA GNC
+⚔ GUERRA NÃO CONVENCIONAL — PROTOCOLO INSURGÊNCIA
+
+Intel CONFIRMADA: prisioneiros rebeldes mantidos em ${obj.name}.
+Autorização GNC ativada. Objetivo: transformar o local em zona de guerra de atrito.
+
+FASE 1 — INFILTRAÇÃO: Penetrar o perímetro de ${obj.name} sem ser detectado.
+FASE 2 — LIBERTAÇÃO: Localizar e libertar os prisioneiros ANTES de qualquer engajamento.
+  ↳ Os prisioneiros, uma vez livres, assumem o combate como força de atrito interna.
+  ↳ Não interferir no engajamento deles — deixar o caos se instalar.
+FASE 3 — LIMPEZA FINAL: Após os rebeldes suprimirem a defesa, eliminar os sobreviventes.
+FASE 4 — EXTRAÇÃO: Sair do perímetro antes da chegada do QRF.
+
+INSERÇÃO: ${water?'AQUÁTICA furtiva via':'Infiltração silenciosa via '} ${ins.name}.
+${sec ? `OBJETIVO SEC.: Eliminar o Oficial de Inteligência responsável pelas capturas em ${sec.name}.` : 'OBJETIVO SEC.: Sem missão secundária. Foco total na sequência GNC.'}
+EXTRAÇÃO: ${ex.name}. Janela pós-engajamento: ${Math.floor(Math.random()*4+5)} minutos.
+
+OPERADOR: ${role.desc}
+${mod?'⚠ MODIFICADOR ATIVO: '+mod:''}
+AVISO TÁTICO: Libertar os prisioneiros PRIMEIRO é condição obrigatória.
+Engajar antes da libertação cancela a vantagem de atrito e compromete a Op.
+`.trim():`
+HORA LOCAL: ${time} // CLASSIFICAÇÃO: KINGSLAYER // DOUTRINA GNC
+⚔ GUERRA NÃO CONVENCIONAL — PROTOCOLO DISTRAÇÃO REBELDE
+
+${obj.name} é alvo de oportunidade GNC. Sem prisioneiros confirmados no local.
+Missão exige ativação da habilidade DISTRAÇÃO para conduzir guerra de atrito.
+
+FASE 1 — INSERÇÃO OCULTA: Infiltrar área de influência de ${obj.name} sem contato.
+FASE 2 — ATIVAÇÃO: Invocar DISTRAÇÃO → Grupo rebelde se direciona ao local.
+  ↳ Aguardar confirmação de chegada dos rebeldes antes de qualquer ação direta.
+  ↳ Os rebeldes iniciam o atrito. Usar o caos como cobertura.
+FASE 3 — EXPLORAÇÃO: Sob cobertura do tiroteio rebelde, avançar para o objetivo.
+FASE 4 — LIMPEZA: Eliminar remanescentes que os rebeldes não neutralizaram.
+FASE 5 — EXTRAÇÃO: Sair antes que o QRF consiga diferenciar Ghosts dos insurgentes.
+
+INSERÇÃO: ${water?'AQUÁTICA furtiva via':'Infiltração silenciosa via '} ${ins.name}.
+${sec ? `OBJETIVO SEC.: Destruir o centro de comunicações que poderia coordenar resposta ao ataque rebelde em ${sec.name}.` : 'OBJETIVO SEC.: Sem missão secundária. Foco total na coordenação GNC.'}
+EXTRAÇÃO: ${ex.name}. Janela pós-distração: ${Math.floor(Math.random()*4+6)} minutos.
+
+OPERADOR: ${role.desc}
+${mod?'⚠ MODIFICADOR ATIVO: '+mod:''}
+HABILIDADE OBRIGATÓRIA: DISTRAÇÃO (Rebeldes) — Sem ela, a Op não pode ser iniciada.
+AVISO TÁTICO: Engajar ANTES da chegada dos rebeldes expõe os Ghosts sem cobertura.
+`.trim()
+  },
+  // Missões de falha vinculadas
+  Cleanup:{
+    label:"OPERAÇÃO DE LIMPEZA",
+    validTypes:["Military","Farm","Checkpoint","Village","POI"],
+    briefFn:(obj,sec,ins,ex,role,mod,time,water)=>`
+HORA LOCAL: ${time} // CLASSIFICAÇÃO: VERMELHO // OP VINCULADA À FALHA
+⚠ QUEIMA DE ARQUIVO — PROTOCOLO LIMPA-RASTRO
+
+Op anterior falhou em ${obj.name}. O cartel tem evidências.
+FASE 1: Retornar a ${obj.name} e eliminar TODAS as testemunhas.
+FASE 2: Destruir qualquer equipamento/documento que vincule os Ghosts à Op.
+
+INSERÇÃO: ${water?'AQUÁTICA emergência via':'Emergência via '} ${ins.name}.
+${sec ? `OBJETIVO SEC.: Eliminar Comandante Local que recebeu o relato em ${sec.name}.` : 'OBJETIVO SEC.: Sem missão secundária. Foco total no primário.'}
+EXTRAÇÃO: ${ex.name}. Janela de ${Math.floor(Math.random()*5+6)} minutos. CRÍTICO.
+
+OPERADOR: ${role.desc}
+${mod?'⚠ MODIFICADOR: '+mod:''}
+NOTA: Missão de alto risco. Cartel em alerta máximo. Nenhum sobrevivente aceito.
+`.trim()
+  },
+  BloodPrison:{
+    label:"CÁRCERE DE SANGUE",
+    validTypes:["Military","Checkpoint"],
+    briefFn:(obj,sec,ins,ex,role,mod,time,water)=>`
+HORA LOCAL: ${time} // CLASSIFICAÇÃO: URGENTE // RESGATE CRÍTICO
+🩸 CÁRCERE DE SANGUE — OPERADOR CAPTURADO
+
+Operador capturado durante Op anterior em ${obj.name}.
+Execução programada para o amanhecer. Janela de resgate: AGORA.
+
+INSERÇÃO: ${water?'AQUÁTICA rápida via':'Assalto direto via '} ${ins.name}.
+OBJETIVO PRIMÁRIO: Localizar e extrair operador vivo de ${obj.name}.
+${sec ? `OBJETIVO SEC.: Neutralizar Comandante responsável pelo cativeiro em ${sec.name}.` : 'OBJETIVO SEC.: Sem missão secundária. Foco total no primário.'}
+EXTRAÇÃO: ${ex.name}. Helicóptero em standby. Código: NOVA-LIMA.
+
+OPERADOR: ${role.desc}
+${mod?'⚠ MODIFICADOR: '+mod:''}
+NOTA: Zero opções. O operador não pode ser deixado para trás.
+`.trim()
+  }
+};
+
+const MODIFIERS = [
+  null, null, null, // 3x chance de sem modificador
+  "DRONE OFFLINE — Sem suporte aéreo ISR",
+  "SEM NVG — Operação em visibilidade reduzida",
+  "ZERO BAIXAS CIVIS — ROE restrito absoluto",
+];
+
+const OP_NAMES = [
+  "CONDOR SILENCIOSO","QUINOA DE FERRO","ALTIPLANO VERMELHO","FANTASMA LHAMA",
+  "SAL NEGRO","NARCISO MORTO","MONTANHA OCA","CORRIDA DA VÍBORA",
+  "CARTEL FANTASMA","FALCÃO NOTURNO","PAPOULA CINZA","BACIA CARMESIM",
+  "SINAL PERDIDO","COLHEITA FRIA","TRIBUTÁRIO ESCURO","QUINUA DE AÇO",
+  "BANDEIRA ENTERRADA","PASSAGEM DA SERPENTE","CUME BRANCO","RAZÃO QUEBRADA"
+];
+/*
+// ═══ MAP SETUP — CRS.Simple com coordenadas do POI list ═════════
+// O canvas do mapa mapeia 0-600 x 0-400 (coordenadas dos POIs)
+const BOUNDS = [[0,0],[400,620]]; // [lat/y, lng/x] no Leaflet
+const lmap = L.map('map',{
+  crs:L.CRS.Simple, minZoom:-1, maxZoom:2,
+  zoomSnap:.25, attributionControl:false, zoomControl:true
+});
+lmap.fitBounds(BOUNDS);
+
+// Background tático (sem imagem externa — fallback elegante)
+L.rectangle(BOUNDS,{
+  color:'#0a2a0a',fillColor:'#050f05',fillOpacity:1,weight:1
+}).addTo(lmap);
+
+// Grid tático
+for(let x=0;x<=620;x+=50) L.polyline([[0,x],[400,x]],{color:'#0a1e0a',weight:.5,opacity:.8}).addTo(lmap);
+for(let y=0;y<=400;y+=50) L.polyline([[y,0],[y,620]],{color:'#0a1e0a',weight:.5,opacity:.8}).addTo(lmap);
+
+// Coordenadas grid (estilo militar)
+for(let x=0;x<=600;x+=100){
+  for(let y=0;y<=400;y+=100){
+    const gridRef = `${String(Math.floor(x/10)).padStart(3,'0')}-${String(Math.floor(y/10)).padStart(3,'0')}`;
+    L.marker([y,x],{icon:L.divIcon({className:'',
+      html:`<div style="font-family:'Share Tech Mono';font-size:8px;color:#0a2a0a;pointer-events:none;white-space:nowrap">${gridRef}</div>`,
+      iconAnchor:[12,6],iconSize:[48,8]}),interactive:false}).addTo(lmap);
+  }
+}*/
+
+// ═══ MAP SETUP — Alinhado com a imagem Itacua_map.jpg ════════════
+// Ajustamos os bounds para refletir uma proporção comum de captura de tela (ex: 1920x1080)
+// Se a sua imagem for quadrada, use [[0,0],[600,600]]
+const BOUNDS = [[0, 0], [400, 620]]; 
+
+const lmap = L.map('map', {
+  crs: L.CRS.Simple,
+  minZoom: -1,
+  maxZoom: 2,
+  zoomSnap: 0.25,
+  attributionControl: false,
+  zoomControl: true
+});
+
+// --- ADIÇÃO DA IMAGEM DE FUNDO ---
+const mapImage = L.imageOverlay('maps/itacua_map.jpg', BOUNDS, {
+  opacity: 1,
+  interactive: false
+}).addTo(lmap);
+
+lmap.fitBounds(BOUNDS);
+
+// Opcional: Mantemos um grid muito sutil por cima da imagem para o visual militar
+for(let x=0; x<=620; x+=50) L.polyline([[0,x],[400,x]],{color:'#00ff41',weight:0.3,opacity:0.2}).addTo(lmap);
+for(let y=0; y<=400; y+=50) L.polyline([[y,0],[y,620]],{color:'#00ff41',weight:0.3,opacity:0.2}).addTo(lmap);
+
+// Remova ou comente o bloco antigo L.rectangle que criava o fundo verde escuro
+// L.rectangle(BOUNDS,{ color:'#0a2a0a',fillColor:'#050f05',fillOpacity:1,weight:1 }).addTo(lmap);
+
+// Desenhar todos os POIs como micro-dots com tooltips
+const POI_COLORS = {
+  Farm:'#80ff40',Checkpoint:'#ffb000',Village:'#40c8ff',
+  POI:'#ff80ff',Safe:'#40ffa0',Military:'#ff4040'
+};
+itacuaPOIs.forEach(poi=>{
+  const col = POI_COLORS[poi.type]||'#80ff80';
+  L.circleMarker([poi.y, poi.x],{
+    radius:6, color:col, fillColor:col,
+    fillOpacity:.7, weight:.5
+  }).addTo(lmap).bindTooltip(
+    `<span style="color:${col}">[${poi.type.toUpperCase()}]</span> ${poi.name}${poi.water?' 〰':''}${poi.prisoners?' ⛓':''}`,
+    {sticky:true, direction:'top'}
+  );
+});
+
+// Legenda de tipos de POI (canto mapa)
+// (já incluída no HTML)
+
+// ═══ STATE ═══════════════════════════════════════════════════════
+let active=null, log=[], mapMarkers=[], mapLines=[];
+
+function clearMap(){
+  mapMarkers.forEach(m=>lmap.removeLayer(m));
+  mapLines.forEach(l=>lmap.removeLayer(l));
+  mapMarkers=[]; mapLines=[];
+}
+
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+function distSq(a,b){ const dx=a.x-b.x, dy=a.y-b.y; return dx*dx + dy*dy; }
+
+function pickRole(){
+  const sel = document.getElementById('sel-role').value;
+  if(sel==='any') return pick(Object.keys(ROLES));
+  return sel;
+}
+
+function mkWpIcon(color, sym){
+  return L.divIcon({
+    className:'',
+    html:`<div style="width:26px;height:26px;border-radius:50%;background:${color};border:2px solid #000;display:flex;align-items:center;justify-content:center;font-family:'VT323';font-size:13px;font-weight:700;color:#000;box-shadow:0 0 12px ${color}cc,0 0 4px ${color}">${sym}</div>`,
+    iconSize:[26,26],iconAnchor:[13,13]
+  });
+}
+
+// ═══ GENERATE ════════════════════════════════════════════════════
+function generateMission(isLinked=false, linkedPOI=null, linkedType=null){
+  clearMap();
+  document.getElementById('btn-gen').classList.add('busy');
+  document.getElementById('mod-alert').style.display='none';
+
+  setTimeout(()=>{
+    const selType = document.getElementById('sel-type').value;
+    const allTypes = ['Assassination','Sabotage','Assault','AssaultSab','Recon','Rescue','UW'];
+    const roleName = pickRole();
+    const role = ROLES[roleName];
+
+    // Determine mission type
+    let mtype;
+    if(isLinked){
+      mtype = Math.random()>.5 ? 'Cleanup' : 'BloodPrison';
+    } else {
+      mtype = selType==='any' ? pick(allTypes) : selType;
+    }
+    const mConfig = MISSION_TYPES[mtype];
+
+    // Pick objective POI
+    let objPOI;
+    if(isLinked && linkedPOI){
+      // Lock to same POI as failed mission
+      objPOI = itacuaPOIs.find(p=>p.name===linkedPOI) || pick(itacuaPOIs.filter(p=>mConfig.validTypes.includes(p.type)));
+    } else if(mConfig.requiresPrisoners){
+      // Rescue missions must target a POI with prisoners
+      const prisonerPOIs = itacuaPOIs.filter(p=>p.prisoners && mConfig.validTypes.includes(p.type));
+      objPOI = prisonerPOIs.length ? pick(prisonerPOIs) : pick(itacuaPOIs.filter(p=>mConfig.validTypes.includes(p.type)));
+    } else {
+      const validObj = itacuaPOIs.filter(p=>mConfig.validTypes.includes(p.type));
+      objPOI = pick(validObj);
+    }
+
+    // Insertion: choose one of the safe points closest to the primary objective
+    const safePOIs = itacuaPOIs
+      .filter(p=>p.type==='Safe' && p.name!==objPOI.name)
+      .sort((a,b)=>distSq(a,objPOI) - distSq(b,objPOI));
+    const bestSafes = safePOIs.slice(0, Math.min(3, safePOIs.length));
+    const insPOI = bestSafes.length ? pick(bestSafes) : pick(itacuaPOIs.filter(p=>p.name!==objPOI.name));
+
+    // Secondary: 70% chance to include a secondary objective
+    const hasSecondary = Math.random() < 0.70;
+    let secPOI = null;
+    let secMtype = null;
+    if(hasSecondary){
+      // Secondary can also be Rescue or UW (GNC) depending on dice + availability
+      const secSpecialRoll = Math.random();
+      const secValid = itacuaPOIs.filter(p=>
+        p.name!==objPOI.name && p.name!==insPOI.name &&
+        ['Military','Checkpoint','Farm','POI'].includes(p.type)
+      );
+      const prisonerSecPOIs = itacuaPOIs.filter(p=>
+        p.prisoners && p.name!==objPOI.name && p.name!==insPOI.name
+      );
+      const uwSecValid = itacuaPOIs.filter(p=>
+        p.name!==objPOI.name && p.name!==insPOI.name &&
+        ['Military','Checkpoint','Farm','Village','POI'].includes(p.type) &&
+        p.type!=='Safe'
+      );
+      if(secSpecialRoll < 0.20 && prisonerSecPOIs.length && mtype!=='Rescue' && mtype!=='UW'){
+        secMtype = 'Rescue';
+        secPOI = pick(prisonerSecPOIs);
+      } else if(secSpecialRoll < 0.40 && uwSecValid.length && mtype!=='UW'){
+        secMtype = 'UW';
+        secPOI = pick(uwSecValid);
+      } else {
+        secPOI = secValid.length ? pick(secValid) : pick(itacuaPOIs.filter(p=>p.name!==objPOI.name));
+      }
+    }
+
+    // Extraction: prefer Safe/Village, far from objective
+    const exValid = itacuaPOIs.filter(p=>
+      p.name!==objPOI.name && p.name!==insPOI.name &&
+      (!secPOI || p.name!==secPOI.name) &&
+      ['Safe','Village'].includes(p.type)
+    );
+    const exPOI = exValid.length ? pick(exValid) : pick(itacuaPOIs.filter(p=>p.name!==objPOI.name));
+
+    // Water insertion check
+    const water = objPOI.water && Math.random()>.5;
+
+    // Modifier
+    const mod = pick(MODIFIERS);
+
+    // Time
+    const h = Math.floor(Math.random()*24);
+    const m = [0,15,30,45][Math.floor(Math.random()*4)];
+    const timeStr = `${String(h).padStart(2,'0')}${String(m).padStart(2,'0')} LT`;
+
+    // Op name
+    const opName = isLinked ?
+      `QUEIMA-${pick(OP_NAMES).split(' ').pop()}` :
+      `OP ${pick(OP_NAMES)}`;
+
+    // Build briefing
+    const uwHasPrisoners = mtype==='UW' ? (objPOI.prisoners||false) : false;
+    const briefing = mtype==='UW'
+      ? mConfig.briefFn(objPOI,secPOI,insPOI,exPOI,role,mod,timeStr,water,uwHasPrisoners)
+      : mConfig.briefFn(objPOI,secPOI,insPOI,exPOI,role,mod,timeStr,water);
+
+    const waypoints = [
+      {label:"INSERÇÃO",    color:"#00ff41", sym:"▼", poi:insPOI, desc:`Via ${water?'lancha/barco (aquática)':'terrestre oculto'}. ${insPOI.type}.`},
+      {label:"OBJETIVO",    color:"#ff2020", sym:"✕", poi:objPOI, desc:`[${objPOI.type.toUpperCase()}] ${mConfig.label}`},
+      {label:"EXTRAÇÃO",    color:"#00c8ff", sym:"▲", poi:exPOI,  desc:`Ponto de exfil. [${exPOI.type.toUpperCase()}]`},
+    ];
+    if(secPOI){
+      const secUwPrisoners = secMtype==='UW' && secPOI.prisoners;
+      const secLabel = secMtype==='Rescue' ? "RESGATE SEC."
+                     : secMtype==='UW'    ? "GNC SEC."
+                     : "OBJ. SEC.";
+      const secDesc  = secMtype==='Rescue' ? `[${secPOI.type.toUpperCase()}] ⛓ Libertar prisioneiros rebeldes.`
+                     : secMtype==='UW' && secUwPrisoners ? `[${secPOI.type.toUpperCase()}] ⚔ GNC — Libertar prisioneiros para guerra de atrito.`
+                     : secMtype==='UW'    ? `[${secPOI.type.toUpperCase()}] ⚔ GNC — Ativar DISTRAÇÃO rebelde.`
+                     : `[${secPOI.type.toUpperCase()}] Objetivo secundário.`;
+      waypoints.splice(2,0,{label:secLabel, color:"#ffb000", sym:"◆", poi:secPOI, desc:secDesc});
+    }
+
+    const mission = {
+      opName, mtype, mLabel:mConfig.label,
+      objPOI: objPOI.name, roleName, role,
+      briefing, timeStr, water, mod, isLinked,
+      isRescue: mtype==='Rescue',
+      hasPrisoners: objPOI.prisoners||false,
+      secMtype,
+      status:'ACT',
+      waypoints
+    };
+
+    active = mission;
+    renderMission(mission);
+
+    // Update role badge
+    document.getElementById('op-badge').style.display='flex';
+    document.getElementById('role-icon').textContent = role.icon;
+    document.getElementById('role-name').textContent = roleName.toUpperCase();
+    document.getElementById('role-weapon').textContent = pick(role.weapons);
+
+    document.getElementById('btn-gen').classList.remove('busy');
+  },150);
+}
+
+// ═══ RENDER ══════════════════════════════════════════════════════
+function renderMission(m){
+  // Header
+  document.getElementById('op-name').textContent = m.opName;
+  document.getElementById('op-sub').textContent =
+    `ITACUA · ${m.timeStr} · ${m.roleName.toUpperCase()}${m.water?' · AQUÁTICA':''}`;
+
+  // Tags
+  const tags = [
+    `<span class="tag t-mission">${m.mLabel}</span>`,
+    m.water ? `<span class="tag t-water">〰 AQUÁTICA</span>` : '',
+    m.mtype==='UW' && m.hasPrisoners  ? `<span class="tag t-prisoners">⛓ GNC — PRISIONEIROS</span>` : '',
+    m.mtype==='UW' && !m.hasPrisoners ? `<span class="tag t-uw">⚔ GNC — DISTRAÇÃO</span>` : '',
+    m.mtype!=='UW' && (m.isRescue || m.hasPrisoners) ? `<span class="tag t-prisoners">⛓ PRISIONEIROS</span>` : '',
+    m.isLinked ? `<span class="tag t-fail">⚠ VINCULADA</span>` : '',
+    m.mod ? `<span class="tag t-mod">MOD</span>` : '',
+  ].filter(Boolean).join('');
+  document.getElementById('op-tags').innerHTML = tags;
+
+  // Briefing with typewriter feel
+  const briefEl = document.getElementById('brief-text');
+  briefEl.className = 'typing';
+  briefEl.textContent = '';
+  const lines = m.briefing.split('\n');
+  let li=0, ci=0;
+  const interval = setInterval(()=>{
+    if(li>=lines.length){clearInterval(interval);briefEl.className='';return;}
+    if(ci<=lines[li].length){
+      briefEl.textContent = lines.slice(0,li).join('\n')+(li>0?'\n':'')+lines[li].slice(0,ci);
+      ci++;
+    } else { li++; ci=0; }
+  },12);
+
+  // Waypoints
+  document.getElementById('wp-list').innerHTML = m.waypoints.map((w)=>`
+    <div class="wp">
+      <div class="wp-icon" style="color:${w.color};text-shadow:0 0 6px ${w.color}">${w.sym}</div>
+      <div>
+        <div class="wp-name" style="color:${w.color};text-shadow:0 0 4px ${w.color}55">${w.label}</div>
+        <div class="wp-loc">${w.poi.name}</div>
+        <div class="wp-desc">${w.desc}</div>
+      </div>
+    </div>`).join('');
+  document.getElementById('sec-wp').style.display='block';
+
+  // State buttons
+  ['b-ok','b-fail','b-abort'].forEach(id=>document.getElementById(id).style.display='flex');
+
+  // Active badge
+  document.getElementById('active-badge').style.display='block';
+  document.getElementById('badge-name').textContent = m.opName;
+
+  // Modifier alert
+  if(m.mod){
+    document.getElementById('mod-alert').style.display='block';
+    document.getElementById('mod-text').textContent = m.mod;
+  }
+
+  // Map: draw markers on POI coordinates
+  m.waypoints.forEach((w)=>{
+    const mk = L.marker([w.poi.y, w.poi.x],{icon:mkWpIcon(w.color,w.sym)}).addTo(lmap);
+    mk.bindPopup(`
+      <div class="pop-title">${w.label}: ${w.poi.name}</div>
+      <div class="pop-type">[${w.poi.type.toUpperCase()}]${w.poi.water?' · ZONA AQUÁTICA':''}${w.poi.prisoners?' · ⛓ PRISIONEIROS':''}</div>
+      <div>${w.desc}</div>
+      <div class="pop-coord">${m.opName} · ITACUA · GRID ${w.poi.x}-${w.poi.y}</div>`);
+    mapMarkers.push(mk);
+  });
+
+  // Route line (dashed green)
+  const routePts = m.waypoints.map(w=>[w.poi.y, w.poi.x]);
+  const line = L.polyline(routePts,{
+    color:'#00ff41', weight:1.5, opacity:.5, dashArray:'7 5'
+  }).addTo(lmap);
+  mapLines.push(line);
+
+  // Fit map to mission markers
+  lmap.fitBounds(
+    L.featureGroup(mapMarkers).getBounds().pad(.35),
+    {animate:true}
+  );
+}
+
+// ═══ RESOLVE ═════════════════════════════════════════════════════
+function resolve(status){
+  if(!active) return;
+  active.status = status;
+  log.unshift({...active});
+  if(log.length>15) log.pop();
+
+  document.getElementById('active-badge').style.display='none';
+  document.getElementById('mod-alert').style.display='none';
+  ['b-ok','b-fail','b-abort'].forEach(id=>document.getElementById(id).style.display='none');
+  renderLog();
+
+  if(status==='F'){
+    // Generate linked cleanup/blood-prison at same POI after delay
+    const prev = log[0];
+    setTimeout(()=>generateMission(true, prev.objPOI, prev.mtype), 2000);
+  } else {
+    active=null;
+  }
+}
+
+function renderLog(){
+  const labels = {ACT:'● ATIVA',S:'✓ SUCESSO',F:'✕ FALHA',A:'⚠ ABORTADA'};
+  const html = log.map(m=>`
+    <div class="log-entry">
+      <span class="log-op">${m.opName}</span>
+      — <span class="ls-${m.status}">${labels[m.status]}</span><br>
+      ${m.mLabel} · ${m.timeStr}${m.water?' · AQUÁTICA':''}${m.mod?' · MOD':''}
+    </div>`).join('');
+  document.getElementById('log-list').innerHTML = html ||
+    '<div class="log-entry" style="color:var(--crt-ghost)">_ Nenhum registro.</div>';
+}
+
+// ═══ CLOCK ═══════════════════════════════════════════════════════
+function tick(){
+  const n=new Date();
+  document.getElementById('tb-clock').textContent =
+    `${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}:${String(n.getSeconds()).padStart(2,'0')}`;
+}
+// ═══ MOBILE TAB SWITCHING ════════════════════════════════════════
+function switchTab(tab){
+  const isMobile = window.innerWidth <= 720;
+  if(!isMobile) return;
+
+  const sidebar = document.getElementById('sidebar');
+  const mapwrap = document.getElementById('mapwrap');
+  const tabs = document.querySelectorAll('.mtab');
+  tabs.forEach(t=>t.classList.remove('active'));
+
+  if(tab === 'map'){
+    sidebar.classList.remove('tab-active');
+    mapwrap.classList.add('tab-active');
+    document.getElementById('tab-map').classList.add('active');
+    // Invalidate map size after display change
+    setTimeout(()=>lmap.invalidateSize(),50);
+  } else {
+    // brief and log both show sidebar, just scroll to relevant section
+    sidebar.classList.add('tab-active');
+    mapwrap.classList.remove('tab-active');
+    document.getElementById('tab-'+tab).classList.add('active');
+    if(tab === 'log'){
+      setTimeout(()=>{
+        const logEl = document.getElementById('log-section');
+        if(logEl) logEl.scrollIntoView({behavior:'smooth'});
+      }, 80);
+    } else {
+      sidebar.scrollTop = 0;
+    }
+  }
+}
+
+// Auto-switch to brief tab on mobile after mission renders (patched into lmap.fitBounds call end)
+// We trigger via a MutationObserver watching op-name changes
+(function(){
+  const obs = new MutationObserver(()=>{
+    if(window.innerWidth <= 720) switchTab('brief');
+  });
+  obs.observe(document.getElementById('op-name'), {childList:true, characterData:true, subtree:true});
+})();
+
+// Ensure map resizes correctly on orientation change
+window.addEventListener('orientationchange', ()=>{
+  setTimeout(()=>lmap.invalidateSize(), 300);
+});
+window.addEventListener('resize', ()=>{
+  setTimeout(()=>lmap.invalidateSize(), 100);
+});
+
+tick(); setInterval(tick,1000);
+</script>
+</body>
+</html>
