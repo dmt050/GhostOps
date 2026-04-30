@@ -381,6 +381,85 @@ select.tbsel option{background:var(--bg2);color:var(--crt-green)}
   #sidebar{display:flex!important}
   #mapwrap{display:block!important}
 }
+
+/* ═══ RESPONSIVE — LANDSCAPE MOBILE ════════════════════════════ */
+/* Quando celular está em landscape (largura > altura, mas ainda pequeno) */
+@media(max-height:500px) and (orientation:landscape){
+  html,body{overflow:hidden}
+
+  /* Topbar compacto: linha única, sem quebra */
+  #topbar{
+    height:38px;padding:0 6px;flex-wrap:nowrap;overflow-x:auto;
+    overflow-y:hidden;gap:0;
+  }
+  .tb-logo{font-size:16px;line-height:38px;padding:0 8px}
+  .tb-selwrap{height:38px;padding:0 5px;flex-shrink:0}
+  select.tbsel{font-size:9px;padding:2px 3px}
+  .tb-sel-label{display:none}
+  #op-badge{height:38px;padding:0 5px}
+  .op-weapon{display:none}
+  #tb-clock{font-size:16px;line-height:38px;padding:0 6px;height:38px;flex-shrink:0}
+
+  /* Botão GERAR OP — sempre visível, nunca cortado */
+  #btn-gen{
+    font-size:14px;padding:4px 10px;margin:0 4px;
+    min-height:28px;flex-shrink:0;white-space:nowrap;
+    order:0; /* garante que apareça antes do clock se necessário */
+  }
+
+  /* Layout principal: linha horizontal (sidebar | mapa) */
+  #main{
+    flex-direction:row;
+    flex:1;
+    overflow:hidden;
+  }
+
+  /* Tab bar: vertical à esquerda, estreita */
+  #mobile-tabs{
+    display:flex;
+    flex-direction:column;
+    width:44px;flex-shrink:0;
+    border-top:none;border-right:1px solid var(--border2);
+    background:var(--bg2);
+    z-index:200;
+  }
+  .mtab{
+    flex:1;padding:6px 2px;font-size:10px;
+    border-top:none;border-left:2px solid transparent;
+    border-right:none;
+    writing-mode:vertical-lr;text-orientation:mixed;
+  }
+  .mtab.active{border-left-color:var(--crt-green);border-top-color:transparent}
+  .mtab-icon{font-size:14px;margin-bottom:3px;writing-mode:horizontal-tb}
+
+  /* Painéis: ocupam o espaço restante */
+  #sidebar{
+    width:220px;flex-shrink:0;display:none;
+    overflow-y:auto;-webkit-overflow-scrolling:touch;
+  }
+  #sidebar.tab-active{display:flex}
+
+  #mapwrap{flex:1;display:none}
+  #mapwrap.tab-active{display:block}
+
+  /* Compactar seções do sidebar */
+  .ss{padding:6px 10px}
+  #op-name{font-size:16px}
+  #brief-wrap{max-height:none;padding:6px 10px}
+  #brief-text{font-size:11px;line-height:1.6}
+  .wp-section{padding:6px 10px}
+  .wp{padding:5px 0;gap:7px}
+  .wp-name{font-size:12px}
+  .wp-loc{font-size:10px}
+
+  /* State buttons compactos */
+  #state-btns{gap:5px;padding:6px 10px}
+  .sbtn{font-size:14px;padding:6px 2px;min-height:34px}
+
+  /* Log */
+  #log-section{padding:6px 10px}
+  .log-entry{font-size:10px;padding:4px 0}
+}
 </style>
 </head>
 <body>
@@ -495,11 +574,14 @@ select.tbsel option{background:var(--bg2);color:var(--crt-green)}
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- Base de dados: POIs, Roles, Missões, Modificadores -->
+<script src="data.js"></script>
 <script>
 // ═══════════════════════════════════════════════════════════════
-//  DATABASE — POIs ITACUA (exatamente conforme especificação)
+//  Os dados (itacuaPOIs, ROLES, MISSION_TYPES, MODIFIERS,
+//  OP_NAMES) estão em data.js — não edite abaixo.
 // ═══════════════════════════════════════════════════════════════
-const itacuaPOIs = [
+/*const itacuaPOIs = [
   // Fazendas
   { name:"Mendez Farm",                   type:"Farm",       x:251, y:160 },
   { name:"Atollo Farm",                   type:"Farm",       x:319, y:144 },
@@ -860,6 +942,7 @@ const OP_NAMES = [
   "SINAL PERDIDO","COLHEITA FRIA","TRIBUTÁRIO ESCURO","QUINUA DE AÇO",
   "BANDEIRA ENTERRADA","PASSAGEM DA SERPENTE","CUME BRANCO","RAZÃO QUEBRADA"
 ];
+*/
 /*
 // ═══ MAP SETUP — CRS.Simple com coordenadas do POI list ═════════
 // O canvas do mapa mapeia 0-600 x 0-400 (coordenadas dos POIs)
@@ -1230,9 +1313,13 @@ function tick(){
     `${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}:${String(n.getSeconds()).padStart(2,'0')}`;
 }
 // ═══ MOBILE TAB SWITCHING ════════════════════════════════════════
+function isMobileView(){
+  // Mobile: portrait estreito OU landscape com altura pequena (celular deitado)
+  return window.innerWidth <= 720 || (window.innerHeight <= 500 && window.innerWidth < 1024);
+}
+
 function switchTab(tab){
-  const isMobile = window.innerWidth <= 720;
-  if(!isMobile) return;
+  if(!isMobileView()) return;
 
   const sidebar = document.getElementById('sidebar');
   const mapwrap = document.getElementById('mapwrap');
@@ -1265,7 +1352,7 @@ function switchTab(tab){
 // We trigger via a MutationObserver watching op-name changes
 (function(){
   const obs = new MutationObserver(()=>{
-    if(window.innerWidth <= 720) switchTab('brief');
+    if(isMobileView()) switchTab('brief');
   });
   obs.observe(document.getElementById('op-name'), {childList:true, characterData:true, subtree:true});
 })();
