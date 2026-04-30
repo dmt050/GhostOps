@@ -414,32 +414,19 @@ select.tbsel option{background:var(--bg2);color:var(--crt-green)}
     overflow:hidden;
   }
 
-  /* Tab bar: vertical à esquerda, estreita */
+  /* Sem abas em landscape: briefing/log e mapa cabem lado a lado */
   #mobile-tabs{
-    display:flex;
-    flex-direction:column;
-    width:44px;flex-shrink:0;
-    border-top:none;border-right:1px solid var(--border2);
-    background:var(--bg2);
-    z-index:200;
+    display:none;
   }
-  .mtab{
-    flex:1;padding:6px 2px;font-size:10px;
-    border-top:none;border-left:2px solid transparent;
-    border-right:none;
-    writing-mode:vertical-lr;text-orientation:mixed;
-  }
-  .mtab.active{border-left-color:var(--crt-green);border-top-color:transparent}
-  .mtab-icon{font-size:14px;margin-bottom:3px;writing-mode:horizontal-tb}
 
   /* Painéis: ocupam o espaço restante */
   #sidebar{
-    width:220px;flex-shrink:0;display:none;
+    width:220px;flex-shrink:0;display:flex;
     overflow-y:auto;-webkit-overflow-scrolling:touch;
   }
   #sidebar.tab-active{display:flex}
 
-  #mapwrap{flex:1;display:none}
+  #mapwrap{flex:1;display:block}
   #mapwrap.tab-active{display:block}
 
   /* Compactar seções do sidebar */
@@ -1013,8 +1000,16 @@ function isMobileView(){
   return window.innerWidth <= 720 || (window.innerHeight <= 500 && window.innerWidth < 1024);
 }
 
+function isLandscapePhone(){
+  return window.innerHeight <= 500 && window.innerWidth > window.innerHeight && window.innerWidth < 1024;
+}
+
+function isTabbedMobileView(){
+  return isMobileView() && !isLandscapePhone();
+}
+
 function switchTab(tab){
-  if(!isMobileView()) return;
+  if(!isTabbedMobileView()) return;
 
   const sidebar = document.getElementById('sidebar');
   const mapwrap = document.getElementById('mapwrap');
@@ -1047,7 +1042,7 @@ function switchTab(tab){
 // We trigger via a MutationObserver watching op-name changes
 (function(){
   const obs = new MutationObserver(()=>{
-    if(isMobileView()) switchTab('brief');
+    if(isTabbedMobileView()) switchTab('brief');
   });
   obs.observe(document.getElementById('op-name'), {childList:true, characterData:true, subtree:true});
 })();
