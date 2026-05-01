@@ -65,20 +65,25 @@ body::after{
 }
 .tb-logo span{color:var(--crt-amber);text-shadow:0 0 8px var(--crt-amber)}
 .tb-logo sub{font-family:var(--mono);font-size:9px;letter-spacing:.2em;
-  color:var(--crt-dark);vertical-align:middle;margin-left:6px}
+  color:var(--crt-dim);vertical-align:middle;margin-left:6px;
+  text-shadow:0 0 4px #00ff4188}
 
 .tb-selwrap{padding:0 10px;border-right:1px solid var(--border2);height:100%;
   display:flex;align-items:center;gap:6px}
-.tb-sel-label{font-size:9px;letter-spacing:.15em;color:var(--crt-dark);text-transform:uppercase}
+.tb-sel-label{
+  font-size:9px;letter-spacing:.15em;color:var(--crt-dim);
+  text-transform:uppercase;text-shadow:0 0 4px #00ff4188;
+}
 select.tbsel{
   font-family:var(--mono);font-size:11px;
-  background:var(--bg2);color:var(--crt-green);
-  border:.5px solid var(--border2);border-radius:2px;
+  background:#0a1a0a;color:#7dff9b;
+  border:.5px solid #2a7a2a;border-radius:2px;
   padding:4px 6px;cursor:pointer;outline:none;
-  text-shadow:var(--phosphor-sm);
+  text-shadow:0 0 5px #00ff41aa;
+  box-shadow:inset 0 0 8px #00ff4114,0 0 4px #00ff4122;
 }
 select.tbsel:focus{border-color:var(--crt-green);box-shadow:0 0 6px #00ff4155}
-select.tbsel option{background:var(--bg2);color:var(--crt-green)}
+select.tbsel option{background:var(--bg2);color:#7dff9b}
 
 #tb-clock{
   font-family:var(--vt);font-size:22px;color:var(--crt-amber);
@@ -125,9 +130,10 @@ select.tbsel option{background:var(--bg2);color:var(--crt-green)}
 
 .ss{border-bottom:1px solid var(--border);padding:12px 14px}
 .ss-label{
-  font-size:9px;letter-spacing:.22em;color:var(--crt-dark);
+  font-size:9px;letter-spacing:.22em;color:var(--crt-dim);
   text-transform:uppercase;margin-bottom:7px;
   display:flex;align-items:center;gap:6px;
+  text-shadow:0 0 4px #00ff4188;
 }
 .ss-label::before{content:'>';color:var(--crt-green);text-shadow:var(--phosphor-sm)}
 
@@ -138,7 +144,10 @@ select.tbsel option{background:var(--bg2);color:var(--crt-green)}
   animation:typing-glow 3s ease-in-out infinite alternate;
 }
 @keyframes typing-glow{0%{text-shadow:var(--phosphor)}100%{text-shadow:0 0 4px #00ff41}}
-#op-sub{font-size:10px;color:var(--crt-dark);margin-top:3px;letter-spacing:.05em}
+#op-sub{
+  font-size:10px;color:#69e887;margin-top:3px;letter-spacing:.05em;
+  text-shadow:0 0 4px #00ff4180;
+}
 
 /* TAGS */
 .tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
@@ -183,7 +192,10 @@ select.tbsel option{background:var(--bg2);color:var(--crt-green)}
   letter-spacing:.06em;color:#c0ffd0}
 .wp-loc{font-size:10px;color:var(--crt-amber);margin-top:1px;
   text-shadow:0 0 4px var(--crt-amber)55}
-.wp-desc{font-size:10px;color:var(--crt-dark);margin-top:1px}
+.wp-desc{
+  font-size:10px;color:#69e887;margin-top:1px;
+  text-shadow:0 0 3px #00ff4166;
+}
 
 /* STATE BUTTONS */
 #state-btns{display:flex;gap:6px;padding:10px 14px;border-bottom:1px solid var(--border)}
@@ -228,9 +240,10 @@ select.tbsel option{background:var(--bg2);color:var(--crt-green)}
 /* LEGEND */
 #legend{
   position:absolute;bottom:14px;right:14px;z-index:999;
-  background:rgba(3,10,3,.94);border:.5px solid var(--border2);
-  border-radius:3px;padding:9px 12px;font-size:10px;color:var(--crt-dark);
-  text-shadow:var(--phosphor-sm);
+  background:rgba(3,10,3,.96);border:.5px solid #2a7a2a;
+  border-radius:3px;padding:9px 12px;font-size:10px;color:#69e887;
+  text-shadow:0 0 4px #00ff4188;
+  box-shadow:inset 0 0 8px #00ff4114,0 0 6px #00ff4122;
 }
 .lr{display:flex;align-items:center;gap:7px;margin-bottom:4px}
 .lr:last-child{margin-bottom:0}
@@ -269,8 +282,10 @@ select.tbsel option{background:var(--bg2);color:var(--crt-green)}
   font-size:11px!important;line-height:1.7!important;color:var(--crt-green)!important}
 .pop-title{font-family:var(--vt)!important;font-size:17px!important;
   color:var(--crt-amber)!important;text-shadow:0 0 6px var(--crt-amber)!important;margin-bottom:3px}
-.pop-type{font-size:9px;color:var(--crt-dark);letter-spacing:.1em;text-transform:uppercase}
-.pop-coord{font-size:9px;color:var(--crt-ghost);margin-top:3px}
+.pop-type{font-size:9px;color:var(--crt-dim);letter-spacing:.1em;text-transform:uppercase;
+  text-shadow:0 0 4px #00ff4188}
+.pop-desc{color:#8dffac;text-shadow:0 0 4px #00ff4177}
+.pop-coord{font-size:9px;color:#69e887;margin-top:3px;text-shadow:0 0 3px #00ff4166}
 .leaflet-control-zoom a{
   background:var(--bg2)!important;color:var(--crt-green)!important;
   border-color:var(--border2)!important;font-size:16px!important;
@@ -467,6 +482,7 @@ select.tbsel option{background:var(--bg2);color:var(--crt-green)}
     <select class="tbsel" id="sel-type">
       <option value="any">ANY</option>
       <option value="Assassination">ASSASSINATO</option>
+      <option value="HVTKidnap">SEQUESTRO DE HVT</option>
       <option value="Sabotage">SABOTAGEM C4</option>
       <option value="Assault">ASSALTO</option>
       <option value="AssaultSab">ASSALTO+SAB</option>
@@ -580,8 +596,9 @@ const lmap = L.map('map', {
   maxZoom: 2,
   zoomSnap: 0.25,
   attributionControl: false,
-  zoomControl: true
+  zoomControl: false
 });
+L.control.zoom({position:'bottomleft'}).addTo(lmap);
 
 // --- ADIÇÃO DA IMAGEM DE FUNDO ---
 let mapImage = null;
@@ -712,6 +729,31 @@ function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 
 function distSq(a,b){ const dx=a.x-b.x, dy=a.y-b.y; return dx*dx + dy*dy; }
 
+function missionCandidatePOIs(pois, mConfig, excludedNames=[]){
+  if(!mConfig || !Array.isArray(mConfig.validTypes)) return [];
+
+  return pois.filter(p=>
+    !excludedNames.includes(p.name) &&
+    mConfig.validTypes.includes(p.type) &&
+    (!mConfig.requiresPrisoners || p.prisoners) &&
+    (!mConfig.requiresHVT || p.hvt)
+  );
+}
+
+function pickProvinceForMission(mConfig, forceId=null){
+  const selectedId = forceId || document.getElementById('sel-province').value;
+  const provinces = provinceList().filter(p=>
+    Array.isArray(p.pois) && missionCandidatePOIs(p.pois, mConfig).length
+  );
+
+  if(selectedId && selectedId !== 'any'){
+    const selected = getProvinceById(selectedId);
+    if(selected && missionCandidatePOIs(selected.pois || [], mConfig).length) return selected;
+  }
+
+  return provinces.length ? pick(provinces) : pickProvince(forceId);
+}
+
 function pickRole(){
   const sel = document.getElementById('sel-role').value;
   if(sel==='any') return pick(Object.keys(ROLES));
@@ -734,7 +776,7 @@ function generateMission(isLinked=false, linkedPOI=null, linkedType=null, linked
 
   setTimeout(()=>{
     const selType = document.getElementById('sel-type').value;
-    const allTypes = ['Assassination','Sabotage','Assault','AssaultSab','Recon','Rescue','UW'];
+    const allTypes = ['Assassination','HVTKidnap','Sabotage','Assault','AssaultSab','Recon','Rescue','UW'];
     const roleName = pickRole();
     const role = ROLES[roleName];
 
@@ -746,7 +788,7 @@ function generateMission(isLinked=false, linkedPOI=null, linkedType=null, linked
       mtype = selType==='any' ? pick(allTypes) : selType;
     }
     const mConfig = MISSION_TYPES[mtype];
-    const province = pickProvince(linkedProvinceId);
+    const province = isLinked ? pickProvince(linkedProvinceId) : pickProvinceForMission(mConfig, linkedProvinceId);
     const pois = province.pois;
     drawProvince(province);
 
@@ -755,12 +797,8 @@ function generateMission(isLinked=false, linkedPOI=null, linkedType=null, linked
     if(isLinked && linkedPOI){
       // Lock to same POI as failed mission
       objPOI = pois.find(p=>p.name===linkedPOI) || pick(pois.filter(p=>mConfig.validTypes.includes(p.type)));
-    } else if(mConfig.requiresPrisoners){
-      // Rescue missions must target a POI with prisoners
-      const prisonerPOIs = pois.filter(p=>p.prisoners && mConfig.validTypes.includes(p.type));
-      objPOI = prisonerPOIs.length ? pick(prisonerPOIs) : pick(pois.filter(p=>mConfig.validTypes.includes(p.type)));
     } else {
-      const validObj = pois.filter(p=>mConfig.validTypes.includes(p.type));
+      const validObj = missionCandidatePOIs(pois, mConfig);
       objPOI = pick(validObj);
     }
 
@@ -782,18 +820,16 @@ function generateMission(isLinked=false, linkedPOI=null, linkedType=null, linked
         p.name!==objPOI.name && p.name!==insPOI.name &&
         ['Military','Checkpoint','Farm','POI'].includes(p.type)
       );
-      const prisonerSecPOIs = pois.filter(p=>
-        p.prisoners && p.name!==objPOI.name && p.name!==insPOI.name
-      );
-      const uwSecValid = pois.filter(p=>
-        p.name!==objPOI.name && p.name!==insPOI.name &&
-        ['Military','Checkpoint','Farm','Village','POI'].includes(p.type) &&
-        p.type!=='Safe'
-      );
+      const hvtSecPOIs = missionCandidatePOIs(pois, MISSION_TYPES.HVTKidnap, [objPOI.name, insPOI.name]);
+      const prisonerSecPOIs = missionCandidatePOIs(pois, MISSION_TYPES.Rescue, [objPOI.name, insPOI.name]);
+      const uwSecValid = missionCandidatePOIs(pois, MISSION_TYPES.UW, [objPOI.name, insPOI.name]);
       if(secSpecialRoll < 0.20 && prisonerSecPOIs.length && mtype!=='Rescue' && mtype!=='UW'){
         secMtype = 'Rescue';
         secPOI = pick(prisonerSecPOIs);
-      } else if(secSpecialRoll < 0.40 && uwSecValid.length && mtype!=='UW'){
+      } else if(secSpecialRoll < 0.40 && hvtSecPOIs.length && mtype!=='HVTKidnap'){
+        secMtype = 'HVTKidnap';
+        secPOI = pick(hvtSecPOIs);
+      } else if(secSpecialRoll < 0.60 && uwSecValid.length && mtype!=='UW'){
         secMtype = 'UW';
         secPOI = pick(uwSecValid);
       } else {
@@ -839,9 +875,11 @@ function generateMission(isLinked=false, linkedPOI=null, linkedType=null, linked
     if(secPOI){
       const secUwPrisoners = secMtype==='UW' && secPOI.prisoners;
       const secLabel = secMtype==='Rescue' ? "RESGATE SEC."
+                     : secMtype==='HVTKidnap' ? "HVT SEC."
                      : secMtype==='UW'    ? "GNC SEC."
                      : "OBJ. SEC.";
       const secDesc  = secMtype==='Rescue' ? `[${secPOI.type.toUpperCase()}] ⛓ Libertar prisioneiros rebeldes.`
+                     : secMtype==='HVTKidnap' ? `[${secPOI.type.toUpperCase()}] Capturar HVT vivo para interrogatorio.`
                      : secMtype==='UW' && secUwPrisoners ? `[${secPOI.type.toUpperCase()}] ⚔ GNC — Libertar prisioneiros para guerra de atrito.`
                      : secMtype==='UW'    ? `[${secPOI.type.toUpperCase()}] ⚔ GNC — Ativar DISTRAÇÃO rebelde.`
                      : `[${secPOI.type.toUpperCase()}] Objetivo secundário.`;
@@ -936,7 +974,7 @@ function renderMission(m){
     mk.bindPopup(`
       <div class="pop-title">${w.label}: ${w.poi.name}</div>
       <div class="pop-type">[${w.poi.type.toUpperCase()}]${w.poi.water?' · ZONA AQUÁTICA':''}${w.poi.prisoners?' · ⛓ PRISIONEIROS':''}</div>
-      <div>${w.desc}</div>
+      <div class="pop-desc">${w.desc}</div>
       <div class="pop-coord">${m.opName} · ${m.provinceName.toUpperCase()} · GRID ${w.poi.x}-${w.poi.y}</div>`);
     mapMarkers.push(mk);
   });

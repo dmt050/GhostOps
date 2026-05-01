@@ -8,14 +8,14 @@ const itacuaPOIs = [
   // Fazendas
   { name:"Mendez Farm",                   type:"Farm",       x:251, y:160 },
   { name:"Atollo Farm",                   type:"Farm",       x:319, y:144 },
-  { name:"Colqhe Ranch",                  type:"Farm",       x:338, y:147 },
+  { name:"Colqhe Ranch",                  type:"Farm",       x:338, y:147, hvt:true }, //hvt
   { name:"Bocca Farm",                    type:"Farm",       x:278, y:110 },
   // Checkpoints
   { name:"CP North (Cotani)",             type:"Checkpoint", x:240, y:340 },
   { name:"CP South (Itacua Base)",        type:"Checkpoint", x:358, y:132 },
   // Vilas e POIs
   { name:"Khochi",                        type:"Village",    x:490, y:88,  water:true, prisoners:true },
-  { name:"Buena Vida",                    type:"Village",    x:350, y:318 },
+  { name:"Buena Vida",                    type:"Village",    x:350, y:318, prisoners:true },
   { name:"Cotani",                        type:"Village",    x:273, y:329 },
   { name:"Culta",                         type:"POI",        x:188, y:276 },
   { name:"Pantoja",                       type:"Village",    x:120, y:186 },
@@ -34,8 +34,8 @@ const itacuaPOIs = [
   { name:"Itacua Echo (Rally Point)",     type:"Safe",       x:238, y:310 },
   // Santa Blanca — Military
   { name:"Outpost Central (Catalina)",           type:"Military", x:350, y:262 },
-  { name:"Outpost Sul (Rally Point Charlie)",    type:"Military", x:207, y:127, prisoners:true },
-  { name:"La Casa del Mexicano",                 type:"Military", x:342, y:100 },
+  { name:"Outpost Sul (Rally Point Charlie)",    type:"Military", x:207, y:127, prisoners:true, hvt:true }, //hvt
+  { name:"La Casa del Mexicano",                 type:"Military", x:342, y:100, hvt:true }, //HVT
   { name:"Sicario House",                        type:"Military", x:184, y:178 },
   { name:"Itacua Base (Santa Blanca)",           type:"Military", x:338, y:82,  prisoners:true },
   // Unidad — Military
@@ -55,13 +55,13 @@ const ocoroPOIS = [
   { name:"Pujio",                         type:"Village",     x:446, y:225, water:true },
   { name:"Puerto Grande",                 type:"Village",     x:190, y:291 , water:true },
   { name:"Puerto Nuevo",                  type:"Village",     x:202, y:161, water:true },
-  { name:"Gas Station Via-B 01",          type:"POI",         x:339, y:35 },
+  { name:"Gas Station Via-B 01",          type:"Safe",         x:339, y:35 },
   { name:"Gas Station Via-B 02",          type:"POI",         x:379, y:147 },
   { name:"Moko",                          type:"POI",         x:215,  y:138  },
   { name:"Santa Rosa",                    type:"POI",         x:369, y:46 },
   { name:"Los Mosquitos",                 type:"POI",         x:327, y:275, water:true },
   { name:"Pachama Scars",                 type:"POI",         x:298, y:66  },
-  { name:"Ocoro Dispensary",              type:"POI",         x:330, y:89 },
+  { name:"Ocoro Dispensary",              type:"Safe",         x:330, y:89 },
   { name:"Nenma Freight Yard",            type:"POI",         x:279, y:164 },
   // Seguros (inserção/extração apenas)
   { name:"Oroco Alpha",               type:"Safe",       x:297, y:110 },
@@ -70,15 +70,15 @@ const ocoroPOIS = [
   { name:"Oroco Delta",               type:"Safe",       x:201, y:144 },
   { name:"A Fisherman's House",       type:"Safe",       x:179,  y:307, water:true },
   // Santa Blanca — Military
-  { name:"Outpost 01 (SB-SouthWest)", type:"Military", x:200, y:63, prisoners:true },
+  { name:"Outpost 01 (SB-SouthWest)", type:"Military", x:200, y:63, prisoners:true, hvt:true }, //here we have alarm, pannels, generator, HVT, mortar, Minigun
   { name:"Outpost 02 (SB-Central)",   type:"Military", x:364, y:131 },
   { name:"Outpost 03 (SB-Pujio South Sector)",    type:"Military", x:427, y:196 },
   { name:"Outpost 04 (SB-Pujio East Sector)",     type:"Military", x:472, y:219, prisoners:true },
-  { name:"Outpost 05 (SB-Pujio West Sector)",     type:"Military", x:424, y:233 },
+  { name:"Outpost 05 (SB-Pujio West Sector)",     type:"Military", x:424, y:233, hvt:true },
   { name:"Outpost 06 (SB-Chem Storage)",          type:"Military", x:328, y:362  },
   { name:"Outpost 07 (SB- Prison Camp)",          type:"Military", x:267,  y:305, prisoners:true },
   { name:"Outpost 08 (SB- West)",                 type:"Military", x:166,  y:254, prisoners:true },
-  { name:"Oroco Base (SB)",                       type:"Military", x:315, y:240, prisoners:true },
+  { name:"Oroco Base (SB)",                       type:"Military", x:315, y:240,}, //SAAM
   { name:"Coca Paste Factory (SB)",             type:"Military", x:248, y:372, prisoners:true },
   { name:"Buchon House",                        type:"Military", x:249, y:343 },
   { name:"Zona Narco Prohibida 01 (SB - Southwest)",   type:"Military", x:189, y:83, water:true },
@@ -190,6 +190,7 @@ const MISSION_TYPES = {
   Assassination:{
     label:"ASSASSINATO",
     validTypes:["Military","Checkpoint","Village","Farm","POI"],
+    requiresHVT: true,
     briefFn:(obj,sec,ins,ex,role,mod,time,water)=>`
 HORA LOCAL: ${time} // CLASSIFICAÇÃO: KINGSLAYER
 OP: NEUTRALIZAÇÃO DE ALVO DE ALTO VALOR
@@ -204,6 +205,30 @@ EXTRAÇÃO: ${ex.name}. Janela de ${Math.floor(Math.random()*8+12)} minutos.
 OPERADOR: ${role.desc}
 ${mod?'⚠ MODIFICADOR ATIVO: '+mod:''}
 ROE: Engajamento apenas de combatentes armados.
+`.trim()
+  },
+  HVTKidnap:{
+    label:"SEQUESTRO DE HVT",
+    validTypes:["Military","Checkpoint","Village","Farm","POI"],
+    requiresHVT: true,
+    briefFn:(obj,sec,ins,ex,role,mod,time,water)=>`
+HORA LOCAL: ${time} // CLASSIFICACAO: KINGSLAYER // PRIORIDADE ALFA
+OP: SEQUESTRO DE ALVO DE ALTO VALOR
+
+OBJETIVO PRIMARIO: Infiltrar ${obj.name}, localizar HVT confirmado e capturar o alvo VIVO.
+O pacote deve ser imobilizado, identificado e conduzido ao ponto de extracao para interrogatorio.
+
+FASE 1 - ISOLAMENTO: Cortar rotas de fuga e neutralizar escolta imediata.
+FASE 2 - CAPTURA: Empregar forca nao letal quando possivel. Letal autorizado apenas para protecao da equipe.
+FASE 3 - EXFILTRACAO: Remover HVT antes da chegada do QRF.
+
+INSERCAO: ${water?'AQUATICA via abordagem discreta a partir de':'Terrestre furtiva via '} ${ins.name}.
+${sec ? `OBJETIVO SEC.: Executar tarefa de oportunidade em ${sec.name} sem comprometer o pacote.` : 'OBJETIVO SEC.: Sem missao secundaria. Prioridade absoluta: HVT vivo.'}
+EXTRACAO: ${ex.name}. Janela de ${Math.floor(Math.random()*5+7)} minutos apos captura.
+
+OPERADOR: ${role.desc}
+${mod?'MODIFICADOR ATIVO: '+mod:''}
+ROE: HVT NAO DEVE SER ELIMINADO. Confirmar identidade antes da extracao.
 `.trim()
   },
   Sabotage:{
