@@ -398,11 +398,11 @@ select.tbsel option{background:var(--bg2);color:#7dff9b}
 }
 
 /* ═══ RESPONSIVE — LANDSCAPE MOBILE ════════════════════════════ */
-/* Quando celular está em landscape (largura > altura, mas ainda pequeno) */
+/* Phone landscape mode (width > height, still compact) */
 @media(max-height:500px) and (orientation:landscape){
   html,body{overflow:hidden}
 
-  /* Topbar compacto: linha única, sem quebra */
+  /* Compact topbar: single line, no wrap */
   #topbar{
     height:38px;padding:0 6px;flex-wrap:nowrap;overflow-x:auto;
     overflow-y:hidden;gap:0;
@@ -415,11 +415,11 @@ select.tbsel option{background:var(--bg2);color:#7dff9b}
   .op-weapon{display:none}
   #tb-clock{font-size:16px;line-height:38px;padding:0 6px;height:38px;flex-shrink:0}
 
-  /* Botão GERAR OP — sempre visível, nunca cortado */
+  /* GENERATE OP button — always visible, never clipped */
   #btn-gen{
     font-size:14px;padding:4px 10px;margin:0 4px;
     min-height:28px;flex-shrink:0;white-space:nowrap;
-    order:0; /* garante que apareça antes do clock se necessário */
+    order:0; /* keep it before the clock when needed */
   }
 
   /* Layout principal: linha horizontal (sidebar | mapa) */
@@ -434,7 +434,7 @@ select.tbsel option{background:var(--bg2);color:#7dff9b}
     display:none;
   }
 
-  /* Painéis: ocupam o espaço restante */
+  /* Panels: occupy remaining space */
   #sidebar{
     width:220px;flex-shrink:0;display:flex;
     overflow-y:auto;-webkit-overflow-scrolling:touch;
@@ -444,7 +444,7 @@ select.tbsel option{background:var(--bg2);color:#7dff9b}
   #mapwrap{flex:1;display:block}
   #mapwrap.tab-active{display:block}
 
-  /* Compactar seções do sidebar */
+  /* Compact sidebar sections */
   .ss{padding:6px 10px}
   #op-name{font-size:16px}
   #brief-wrap{max-height:none;padding:6px 10px}
@@ -481,14 +481,14 @@ select.tbsel option{background:var(--bg2);color:#7dff9b}
     <span class="tb-sel-label">Mission</span>
     <select class="tbsel" id="sel-type">
       <option value="any">ANY</option>
-      <option value="Assassination">ASSASSINATO</option>
-      <option value="HVTKidnap">SEQUESTRO DE HVT</option>
-      <option value="Sabotage">SABOTAGEM C4</option>
-      <option value="Assault">ASSALTO</option>
-      <option value="AssaultSab">ASSALTO+SAB</option>
+      <option value="Assassination">ASSASSINATION</option>
+      <option value="HVTKidnap">HVT ABDUCTION</option>
+      <option value="Sabotage">C4 SABOTAGE</option>
+      <option value="Assault">ASSAULT</option>
+      <option value="AssaultSab">ASSAULT+SAB</option>
       <option value="Recon">RECON</option>
-      <option value="Rescue">RESGATE DE PRISIONEIROS</option>
-      <option value="UW">GUERRA NÃO CONVENCIONAL (GNC)</option>
+      <option value="Rescue">PRISONER RESCUE</option>
+      <option value="UW">UNCONVENTIONAL WARFARE (UW)</option>
     </select>
   </div>
 
@@ -498,8 +498,8 @@ select.tbsel option{background:var(--bg2);color:#7dff9b}
       <option value="any">ANY</option>
       <option value="Sniper">SNIPER</option>
       <option value="CQB">CQB</option>
-      <option value="Support">SUPORTE</option>
-      <option value="Assault">ASSALTO</option>
+      <option value="Support">SUPPORT</option>
+      <option value="Assault">ASSAULT</option>
       <option value="Ghost">GHOST</option>
     </select>
   </div>
@@ -513,7 +513,7 @@ select.tbsel option{background:var(--bg2);color:#7dff9b}
   </div>
 
   <div id="tb-clock">--:--:--</div>
-  <button id="btn-gen" onclick="generateMission()">▶ GERAR OP</button>
+  <button id="btn-gen" onclick="generateMission()">▶ GENERATE OP</button>
 </div>
 
 <!-- MAIN -->
@@ -522,35 +522,35 @@ select.tbsel option{background:var(--bg2);color:#7dff9b}
   <div id="sidebar">
     <!-- Briefing header -->
     <div class="ss">
-      <div class="ss-label">Classificação · KingSLayer</div>
-      <div id="op-name">[ AGUARDANDO ORDENS ]</div>
-      <div id="op-sub">Terminal inativo. Aguarde transmissão.</div>
+      <div class="ss-label">Classification · KingSLayer</div>
+      <div id="op-name">[ AWAITING ORDERS ]</div>
+      <div id="op-sub">Terminal inactive. Await transmission.</div>
       <div class="tags" id="op-tags"></div>
     </div>
 
     <!-- Briefing text -->
     <div id="brief-wrap">
-      <div class="ss-label" style="padding:0 0 6px">Briefing Operacional</div>
-      <div id="brief-text" class="empty">_ Pressione GERAR OP para receber missão, Nomad.</div>
+      <div class="ss-label" style="padding:0 0 6px">Operational Briefing</div>
+      <div id="brief-text" class="empty">_ Press GENERATE OP to receive a mission, Nomad.</div>
     </div>
 
     <!-- Waypoints -->
     <div class="wp-section" id="sec-wp" style="display:none">
-      <div class="ss-label">Waypoints Táticos</div>
+      <div class="ss-label">Tactical Waypoints</div>
       <div id="wp-list"></div>
     </div>
 
     <!-- State buttons -->
     <div id="state-btns">
-      <button class="sbtn" id="b-ok"    onclick="resolve('S')">✓ SUCESSO</button>
-      <button class="sbtn" id="b-fail"  onclick="resolve('F')">✕ FALHA</button>
+      <button class="sbtn" id="b-ok"    onclick="resolve('S')">✓ SUCCESS</button>
+      <button class="sbtn" id="b-fail"  onclick="resolve('F')">✕ FAILURE</button>
       <button class="sbtn" id="b-abort" onclick="resolve('A')">⚠ ABORT</button>
     </div>
 
     <!-- Log -->
     <div id="log-section">
       <div class="ss-label" style="margin-bottom:6px">KingSLayer Log</div>
-      <div id="log-list"><div class="log-entry" style="color:var(--crt-ghost)">_ Nenhum registro.</div></div>
+      <div id="log-list"><div class="log-entry" style="color:var(--crt-ghost)">_ No records.</div></div>
     </div>
   </div>
 
@@ -560,12 +560,12 @@ select.tbsel option{background:var(--bg2);color:#7dff9b}
     <div id="map-overlay"></div>
 
     <div id="legend">
-      <div class="lr"><div class="ld" style="background:#00ff41;box-shadow:0 0 5px #00ff41"></div>Inserção</div>
-      <div class="lr"><div class="ld" style="background:#ff2020;box-shadow:0 0 5px #ff2020"></div>Objetivo</div>
-      <div class="lr"><div class="ld" style="background:#ffb000;box-shadow:0 0 5px #ffb000"></div>Obj. Sec.</div>
-      <div class="lr"><div class="ld" style="background:#00c8ff;box-shadow:0 0 5px #00c8ff"></div>Extração</div>
+      <div class="lr"><div class="ld" style="background:#00ff41;box-shadow:0 0 5px #00ff41"></div>Insertion</div>
+      <div class="lr"><div class="ld" style="background:#ff2020;box-shadow:0 0 5px #ff2020"></div>Objective</div>
+      <div class="lr"><div class="ld" style="background:#ffb000;box-shadow:0 0 5px #ffb000"></div>Secondary Obj.</div>
+      <div class="lr"><div class="ld" style="background:#00c8ff;box-shadow:0 0 5px #00c8ff"></div>Extraction</div>
     </div>
-    <div id="active-badge">OP ATIVA ● <span id="badge-name">—</span></div>
+    <div id="active-badge">OP ACTIVE ● <span id="badge-name">—</span></div>
     <div id="mod-alert" id="mod-alert">⚠ <span id="mod-text">—</span></div>
   </div>
 </div>
@@ -573,10 +573,10 @@ select.tbsel option{background:var(--bg2);color:#7dff9b}
 <!-- MOBILE TAB BAR -->
 <div id="mobile-tabs">
   <button class="mtab" id="tab-brief" onclick="switchTab('brief')">
-    <span class="mtab-icon">◈</span>MISSÃO
+    <span class="mtab-icon">◈</span>MISSION
   </button>
   <button class="mtab active" id="tab-map" onclick="switchTab('map')">
-    <span class="mtab-icon">⊞</span>MAPA
+    <span class="mtab-icon">⊞</span>MAP
   </button>
   <button class="mtab" id="tab-log" onclick="switchTab('log')">
     <span class="mtab-icon">▤</span>LOG
@@ -584,11 +584,11 @@ select.tbsel option{background:var(--bg2);color:#7dff9b}
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<!-- Base de dados: POIs, Roles, Missões, Modificadores -->
+<!-- Database: POIs, Roles, Missions, Modifiers -->
 <script src="data.js"></script>
 <script>
 // ═══ MAP SETUP — Alinhado com a imagem Itacua_map.jpg ════════════
-// Ajustamos os bounds para refletir uma proporção comum de captura de tela (ex: 1920x1080)
+// Bounds reflect a common screenshot aspect ratio (ex: 1920x1080)
 // Se a sua imagem for quadrada, use [[0,0],[600,600]]
 const lmap = L.map('map', {
   crs: L.CRS.Simple,
@@ -600,7 +600,7 @@ const lmap = L.map('map', {
 });
 L.control.zoom({position:'bottomleft'}).addTo(lmap);
 
-// --- ADIÇÃO DA IMAGEM DE FUNDO ---
+// --- BACKGROUND IMAGE SETUP ---
 let mapImage = null;
 let basePoiMarkers = [];
 let gridLines = [];
@@ -700,21 +700,21 @@ function setupMapCoordinateDebug(){
   lmap.on('click', (ev)=>{
     const x = Math.round(ev.latlng.lng);
     const y = Math.round(ev.latlng.lat);
-    const provinceLabel = currentProvince ? currentProvince.name.toUpperCase() : 'SEM PROVINCIA';
+    const provinceLabel = currentProvince ? currentProvince.name.toUpperCase() : 'NO PROVINCE';
     L.popup()
       .setLatLng(ev.latlng)
       .setContent(`
         <div class="pop-title">DEBUG COORD</div>
         <div class="pop-type">${provinceLabel}</div>
         <div>x: ${x}, y: ${y}</div>
-        <div class="pop-coord">{ name:"Novo POI", type:"POI", x:${x}, y:${y} }</div>
+        <div class="pop-coord">{ name:"New POI", type:"POI", x:${x}, y:${y} }</div>
       `)
       .openOn(lmap);
   });
 }
 
 // Legenda de tipos de POI (canto mapa)
-// (já incluída no HTML)
+// (already included in HTML)
 
 // ═══ STATE ═══════════════════════════════════════════════════════
 let active=null, log=[], mapMarkers=[], mapLines=[];
@@ -814,7 +814,7 @@ function generateMission(isLinked=false, linkedPOI=null, linkedType=null, linked
     let secPOI = null;
     let secMtype = null;
     if(hasSecondary){
-      // Secondary can also be Rescue or UW (GNC) depending on dice + availability
+      // Secondary can also be Rescue or UW depending on dice + availability
       const secSpecialRoll = Math.random();
       const secValid = pois.filter(p=>
         p.name!==objPOI.name && p.name!==insPOI.name &&
@@ -858,7 +858,7 @@ function generateMission(isLinked=false, linkedPOI=null, linkedType=null, linked
 
     // Op name
     const opName = isLinked ?
-      `QUEIMA-${pick(OP_NAMES).split(' ').pop()}` :
+      `BURN-${pick(OP_NAMES).split(' ').pop()}` :
       `OP ${pick(OP_NAMES)}`;
 
     // Build briefing
@@ -868,21 +868,21 @@ function generateMission(isLinked=false, linkedPOI=null, linkedType=null, linked
       : mConfig.briefFn(objPOI,secPOI,insPOI,exPOI,role,mod,timeStr,water);
 
     const waypoints = [
-      {label:"INSERÇÃO",    color:"#00ff41", sym:"▼", poi:insPOI, desc:`Via ${water?'lancha/barco (aquática)':'terrestre oculto'}. ${insPOI.type}.`},
-      {label:"OBJETIVO",    color:"#ff2020", sym:"✕", poi:objPOI, desc:`[${objPOI.type.toUpperCase()}] ${mConfig.label}`},
-      {label:"EXTRAÇÃO",    color:"#00c8ff", sym:"▲", poi:exPOI,  desc:`Ponto de exfil. [${exPOI.type.toUpperCase()}]`},
+      {label:"INSERTION",    color:"#00ff41", sym:"▼", poi:insPOI, desc:`Route: ${water?'boat/waterborne':'concealed overland'}. ${insPOI.type}.`},
+      {label:"OBJECTIVE",    color:"#ff2020", sym:"✕", poi:objPOI, desc:`[${objPOI.type.toUpperCase()}] ${mConfig.label}`},
+      {label:"EXTRACTION",    color:"#00c8ff", sym:"▲", poi:exPOI,  desc:`Exfil point. [${exPOI.type.toUpperCase()}]`},
     ];
     if(secPOI){
       const secUwPrisoners = secMtype==='UW' && secPOI.prisoners;
-      const secLabel = secMtype==='Rescue' ? "RESGATE SEC."
+      const secLabel = secMtype==='Rescue' ? "RESCUE SEC."
                      : secMtype==='HVTKidnap' ? "HVT SEC."
-                     : secMtype==='UW'    ? "GNC SEC."
-                     : "OBJ. SEC.";
-      const secDesc  = secMtype==='Rescue' ? `[${secPOI.type.toUpperCase()}] ⛓ Libertar prisioneiros rebeldes.`
-                     : secMtype==='HVTKidnap' ? `[${secPOI.type.toUpperCase()}] Capturar HVT vivo para interrogatorio.`
-                     : secMtype==='UW' && secUwPrisoners ? `[${secPOI.type.toUpperCase()}] ⚔ GNC — Libertar prisioneiros para guerra de atrito.`
-                     : secMtype==='UW'    ? `[${secPOI.type.toUpperCase()}] ⚔ GNC — Ativar DISTRAÇÃO rebelde.`
-                     : `[${secPOI.type.toUpperCase()}] Objetivo secundário.`;
+                     : secMtype==='UW'    ? "UW SEC."
+                     : "SEC. OBJ.";
+      const secDesc  = secMtype==='Rescue' ? `[${secPOI.type.toUpperCase()}] ⛓ Free rebel prisoners.`
+                     : secMtype==='HVTKidnap' ? `[${secPOI.type.toUpperCase()}] Capture HVT alive for interrogation.`
+                     : secMtype==='UW' && secUwPrisoners ? `[${secPOI.type.toUpperCase()}] ⚔ UW - Free prisoners for attrition warfare.`
+                     : secMtype==='UW'    ? `[${secPOI.type.toUpperCase()}] ⚔ UW - Activate REBEL DISTRACTION.`
+                     : `[${secPOI.type.toUpperCase()}] Secondary objective.`;
       waypoints.splice(2,0,{label:secLabel, color:"#ffb000", sym:"◆", poi:secPOI, desc:secDesc});
     }
 
@@ -915,16 +915,16 @@ function renderMission(m){
   // Header
   document.getElementById('op-name').textContent = m.opName;
   document.getElementById('op-sub').textContent =
-    `${m.provinceName.toUpperCase()} · ${m.timeStr} · ${m.roleName.toUpperCase()}${m.water?' · AQUÁTICA':''}`;
+    `${m.provinceName.toUpperCase()} · ${m.timeStr} · ${m.roleName.toUpperCase()}${m.water?' · WATERBORNE':''}`;
 
   // Tags
   const tags = [
     `<span class="tag t-mission">${m.mLabel}</span>`,
-    m.water ? `<span class="tag t-water">〰 AQUÁTICA</span>` : '',
-    m.mtype==='UW' && m.hasPrisoners  ? `<span class="tag t-prisoners">⛓ GNC — PRISIONEIROS</span>` : '',
-    m.mtype==='UW' && !m.hasPrisoners ? `<span class="tag t-uw">⚔ GNC — DISTRAÇÃO</span>` : '',
-    m.mtype!=='UW' && (m.isRescue || m.hasPrisoners) ? `<span class="tag t-prisoners">⛓ PRISIONEIROS</span>` : '',
-    m.isLinked ? `<span class="tag t-fail">⚠ VINCULADA</span>` : '',
+    m.water ? `<span class="tag t-water">〰 WATERBORNE</span>` : '',
+    m.mtype==='UW' && m.hasPrisoners  ? `<span class="tag t-prisoners">⛓ UW - PRISONERS</span>` : '',
+    m.mtype==='UW' && !m.hasPrisoners ? `<span class="tag t-uw">⚔ UW - DISTRACTION</span>` : '',
+    m.mtype!=='UW' && (m.isRescue || m.hasPrisoners) ? `<span class="tag t-prisoners">⛓ PRISONERS</span>` : '',
+    m.isLinked ? `<span class="tag t-fail">⚠ LINKED</span>` : '',
     m.mod ? `<span class="tag t-mod">MOD</span>` : '',
   ].filter(Boolean).join('');
   document.getElementById('op-tags').innerHTML = tags;
@@ -973,7 +973,7 @@ function renderMission(m){
     const mk = L.marker([w.poi.y, w.poi.x],{icon:mkWpIcon(w.color,w.sym)}).addTo(lmap);
     mk.bindPopup(`
       <div class="pop-title">${w.label}: ${w.poi.name}</div>
-      <div class="pop-type">[${w.poi.type.toUpperCase()}]${w.poi.water?' · ZONA AQUÁTICA':''}${w.poi.prisoners?' · ⛓ PRISIONEIROS':''}</div>
+      <div class="pop-type">[${w.poi.type.toUpperCase()}]${w.poi.water?' · WATERBORNE ZONE':''}${w.poi.prisoners?' · ⛓ PRISONERS':''}</div>
       <div class="pop-desc">${w.desc}</div>
       <div class="pop-coord">${m.opName} · ${m.provinceName.toUpperCase()} · GRID ${w.poi.x}-${w.poi.y}</div>`);
     mapMarkers.push(mk);
@@ -1015,15 +1015,15 @@ function resolve(status){
 }
 
 function renderLog(){
-  const labels = {ACT:'● ATIVA',S:'✓ SUCESSO',F:'✕ FALHA',A:'⚠ ABORTADA'};
+  const labels = {ACT:'● ACTIVE',S:'✓ SUCCESS',F:'✕ FAILURE',A:'⚠ ABORTED'};
   const html = log.map(m=>`
     <div class="log-entry">
       <span class="log-op">${m.opName}</span>
       — <span class="ls-${m.status}">${labels[m.status]}</span><br>
-      ${m.provinceName.toUpperCase()} · ${m.mLabel} · ${m.timeStr}${m.water?' · AQUÁTICA':''}${m.mod?' · MOD':''}
+      ${m.provinceName.toUpperCase()} · ${m.mLabel} · ${m.timeStr}${m.water?' · WATERBORNE':''}${m.mod?' · MOD':''}
     </div>`).join('');
   document.getElementById('log-list').innerHTML = html ||
-    '<div class="log-entry" style="color:var(--crt-ghost)">_ Nenhum registro.</div>';
+    '<div class="log-entry" style="color:var(--crt-ghost)">_ No records.</div>';
 }
 
 // ═══ CLOCK ═══════════════════════════════════════════════════════
